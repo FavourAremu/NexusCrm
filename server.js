@@ -21,6 +21,10 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
+// ─── Serve Frontend ───────────────────────────────────────────
+const pathMod = require('path');
+app.use(express.static(pathMod.join(__dirname, 'public')));
+
 // ─── Neon Postgres Connection ─────────────────────────────────
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,  // your Neon connection string
@@ -503,6 +507,11 @@ app.get('/api/team', auth, async (req, res) => {
 
 // ─── Health check ─────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+
+// ─── Catch-all: serve frontend for any non-API route ──────────
+app.get('*', (req, res) => {
+  res.sendFile(pathMod.join(__dirname, 'public', 'index.html'));
+});
 
 // ─── Start ────────────────────────────────────────────────────
 initDB().then(() => {
