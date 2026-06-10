@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusCRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────────────── */
+:root {
+  --bg:    #07080a;
+  --bg2:   #0d0f12;
+  --bg3:   #141618;
+  --bg4:   #1b1d21;
+  --bg5:   #222529;
+  --b:     #1f2126;
+  --b2:    #2a2d34;
+  --b3:    #363a42;
+  --t:     #eaebee;
+  --t2:    #858c99;
+  --t3:    #454b57;
+  --ink:   #5c6bc0;
+  --ink2:  #7986cb;
+  --inkbg: rgba(92,107,192,.13);
+  --inkbd: rgba(92,107,192,.28);
+  --go:    #26a69a;
+  --gobg:  rgba(38,166,154,.11);
+  --gobd:  rgba(38,166,154,.26);
+  --warn:  #f59e0b;
+  --warnbg:rgba(245,158,11,.1);
+  --warnbd:rgba(245,158,11,.24);
+  --err:   #ef5350;
+  --errbg: rgba(239,83,80,.1);
+  --errbd: rgba(239,83,80,.24);
+  --sky:   #29b6f6;
+  --skybg: rgba(41,182,246,.1);
+  --r:6px; --rl:10px; --rxl:15px;
+  --mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);font-size:14px;overflow:hidden;}
+*{scrollbar-width:thin;scrollbar-color:var(--b3) transparent;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+
+/* ── AUTH SCREENS ───────────────────────────────────── */
+.auth-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900;}
+.auth-panel{width:420px;max-width:95vw;}
+.auth-logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.8px;margin-bottom:4px;text-align:center;}
+.auth-logo span{color:var(--ink2);}
+.auth-sub{text-align:center;font-size:13px;color:var(--t3);margin-bottom:32px;}
+.auth-card{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--rxl);padding:28px 32px;}
+.auth-title{font-size:16px;font-weight:600;margin-bottom:20px;}
+.auth-error{background:var(--errbg);border:1px solid var(--errbd);border-radius:var(--r);padding:10px 13px;font-size:13px;color:var(--err);margin-bottom:14px;display:none;}
+.auth-footer{text-align:center;margin-top:16px;font-size:13px;color:var(--t3);}
+.auth-footer a{color:var(--ink2);cursor:pointer;text-decoration:none;}
+.auth-footer a:hover{text-decoration:underline;}
+
+/* ── FORM ELEMENTS ───────────────────────────────────── */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:11.5px;font-weight:500;color:var(--t2);margin-bottom:5px;letter-spacing:.2px;}
+.fi,.fsel,.fta{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:9px 12px;color:var(--t);font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--ink);}
+.fi::placeholder{color:var(--t3);}
+.fsel{appearance:none;cursor:pointer;}
+.fta{resize:vertical;min-height:75px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+select option{background:var(--bg3);}
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .13s;font-family:'Inter',sans-serif;}
+.btn svg{width:13px;height:13px;flex-shrink:0;}
+.btn-p{background:var(--ink);color:#fff;}.btn-p:hover{background:var(--ink2);}
+.btn-g{background:transparent;color:var(--t2);border:1px solid var(--b);}.btn-g:hover{background:var(--bg3);color:var(--t);}
+.btn-d{background:var(--errbg);color:var(--err);border:1px solid var(--errbd);}.btn-d:hover{background:rgba(239,83,80,.18);}
+.btn-ok{background:var(--gobg);color:var(--go);border:1px solid var(--gobd);}.btn-ok:hover{background:rgba(38,166,154,.2);}
+.btn-full{width:100%;justify-content:center;padding:10px;}
+.btn-sm{padding:4px 9px;font-size:12px;}
+.btn-xs{padding:3px 7px;font-size:11px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* ── APP SHELL ───────────────────────────────────────── */
+#app{display:none;height:100vh;flex-direction:column;}
+.topbar{height:50px;background:var(--bg2);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px;gap:0;flex-shrink:0;}
+.tb-logo{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;letter-spacing:-.5px;margin-right:18px;white-space:nowrap;flex-shrink:0;}
+.tb-logo span{color:var(--ink2);}
+.tb-nav{display:flex;gap:1px;flex:1;overflow-x:auto;}
+.tb-nav::-webkit-scrollbar{height:0;}
+.tn{padding:6px 11px;border-radius:var(--r);font-size:12.5px;cursor:pointer;color:var(--t3);transition:all .13s;white-space:nowrap;user-select:none;}
+.tn:hover{background:var(--bg3);color:var(--t2);}
+.tn.active{background:var(--inkbg);color:var(--ink2);font-weight:500;border:1px solid var(--inkbd);}
+.tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:12px;}
+.sync-pill{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t3);padding:4px 9px;border-radius:20px;border:1px solid var(--b);}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--go);flex-shrink:0;}
+.sdot.busy{background:var(--warn);animation:blink .9s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.user-chip{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--b2);border-radius:20px;padding:4px 12px;font-size:12.5px;cursor:pointer;}
+.udot{width:7px;height:7px;border-radius:50%;background:var(--go);flex-shrink:0;}
+
+/* ── BODY LAYOUT ─────────────────────────────────────── */
+.app-body{flex:1;display:flex;overflow:hidden;}
+.main-panel{flex:1;overflow-y:auto;padding:22px 24px;}
+.act-panel{width:268px;border-left:1px solid var(--b);background:var(--bg2);display:flex;flex-direction:column;flex-shrink:0;}
+.ap-head{padding:12px 15px;border-bottom:1px solid var(--b);font-size:12px;font-weight:500;color:var(--t2);display:flex;align-items:center;justify-content:space-between;}
+.ap-body{flex:1;overflow-y:auto;padding:5px;}
+
+/* ── ACTIVITY ITEMS ──────────────────────────────────── */
+.ai{padding:9px 8px;border-radius:var(--r);}
+.ai:hover{background:var(--bg3);}
+.ai-row{display:flex;gap:8px;}
+.ai-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;}
+.ai-txt{font-size:12px;color:var(--t2);line-height:1.5;}
+.ai-txt strong{color:var(--t);font-weight:500;}
+.ai-ts{font-size:10px;color:var(--t3);margin-top:2px;}
+
+/* ── PAGES ───────────────────────────────────────────── */
+.page{display:none;}.page.active{display:block;}
+
+/* ── STATS ───────────────────────────────────────────── */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:11px;margin-bottom:20px;}
+.sc{background:var(--bg2);border:1px solid var(--b);border-radius:var(--rl);padding:15px 17px;}
+.sc-l{font-size:10px;color:var(--t3);font-weight:500;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;}
+.sc-v{font-size:23px;font-weight:600;letter-spacing:-.7px;font-family:'Syne',sans-serif;}
+.sc-s{font-size:11px;color:var(--t3);margin-top:2px;}
+.sc-ink .sc-v{color:var(--ink2);}.sc-go .sc-v{color:var(--go);}.sc-warn .sc-v{color:var(--warn);}.sc-err .sc-v{color:var(--err);}.sc-sky .sc-v{color:var(--sky);}
+
+/* ── TABLE ───────────────────────────────────────────── */
+.tw{background:var(--bg2);border:1px solid var(--b);border-radius:var(--rl);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--b);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--b);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg3);}
+tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
+.td2{color:var(--t2);}
+
+/* ── BADGES ──────────────────────────────────────────── */
+.bx{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.bx-go{background:var(--gobg);color:var(--go);}
+.bx-warn{background:var(--warnbg);color:var(--warn);}
+.bx-err{background:var(--errbg);color:var(--err);}
+.bx-sky{background:var(--skybg);color:var(--sky);}
+.bx-ink{background:var(--inkbg);color:var(--ink2);}
+.bx-gr{background:var(--bg5);color:var(--t2);}
+
+/* ── CARD ────────────────────────────────────────────── */
+.card{background:var(--bg2);border:1px solid var(--b);border-radius:var(--rl);padding:17px 19px;}
+.card-sm{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:11px 14px;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.st{font-size:13.5px;font-weight:600;font-family:'Syne',sans-serif;}
+
+/* ── MODAL ───────────────────────────────────────────── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
+.mb{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--rxl);width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;}
+.mb-wide{width:660px;}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--b);}
+.mt{font-size:14px;font-weight:600;font-family:'Syne',sans-serif;}
+.mx{background:none;border:none;color:var(--t3);cursor:pointer;padding:3px;border-radius:4px;display:flex;}
+.mx:hover{color:var(--t);background:var(--bg4);}
+.mbody{padding:20px;}
+.mfoot{padding:12px 20px;border-top:1px solid var(--b);display:flex;justify-content:flex-end;gap:8px;}
+
+/* ── SEARCH ──────────────────────────────────────────── */
+.sw{position:relative;}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none;}
+.sin{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:7px 11px 7px 30px;color:var(--t);font-size:13px;font-family:'Inter',sans-serif;outline:none;width:200px;transition:all .15s;}
+.sin:focus{border-color:var(--ink);width:240px;}
+
+/* ── PIPELINE ─────────────────────────────────────────── */
+.pipe{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;}
+.pc{min-width:215px;width:215px;}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--b);}
+.pht{font-size:12px;font-weight:500;}
+.phc{font-size:10px;background:var(--bg5);color:var(--t3);padding:1px 6px;border-radius:10px;}
+.dc{background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);padding:11px 12px;margin-bottom:6px;cursor:pointer;transition:all .13s;}
+.dc:hover{border-color:var(--ink);transform:translateY(-1px);}
+.dn{font-size:13px;font-weight:500;margin-bottom:3px;}
+.dco{font-size:11.5px;color:var(--t2);margin-bottom:7px;}
+.df{display:flex;align-items:center;justify-content:space-between;}
+.dv{font-size:12.5px;font-weight:600;color:var(--go);font-family:var(--mono);}
+
+/* ── TASK ─────────────────────────────────────────────── */
+.ti{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--b);}
+.ti:last-child{border-bottom:none;}
+.tck{width:16px;height:16px;border:1.5px solid var(--b3);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px;}
+.tck.done{background:var(--go);border-color:var(--go);}
+.tck.done::after{content:'✓';font-size:9px;color:#000;font-weight:800;}
+.ttl{font-size:13px;}.ttl.done{text-decoration:line-through;color:var(--t3);}
+.tme{font-size:11px;color:var(--t3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── NOTE ─────────────────────────────────────────────── */
+.ni{padding:13px 15px;border-bottom:1px solid var(--b);}
+.ni:last-child{border-bottom:none;}
+.nc{font-size:13.5px;line-height:1.6;margin-bottom:6px;}
+.nm{font-size:11px;color:var(--t3);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* ── TICKET ───────────────────────────────────────────── */
+.tki{padding:13px 15px;border-bottom:1px solid var(--b);display:flex;gap:12px;}
+.tki:last-child{border-bottom:none;}
+.tki-main{flex:1;}
+.tki-title{font-size:13.5px;font-weight:500;margin-bottom:4px;}
+.tki-meta{font-size:11px;color:var(--t3);display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── VENDOR ───────────────────────────────────────────── */
+.vc{background:var(--bg3);border:1px solid var(--b);border-radius:var(--rl);padding:14px 16px;margin-bottom:9px;}
+.vc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.vc-name{font-size:14px;font-weight:600;}
+.vc-cat{font-size:11.5px;color:var(--t3);margin-top:1px;}
+.vc-info{font-size:12.5px;color:var(--t2);line-height:1.7;}
+
+/* ── LEAD CARD ────────────────────────────────────────── */
+.lead-cap{background:linear-gradient(135deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--inkbd);border-radius:var(--rxl);padding:22px 26px;margin-bottom:18px;}
+.lead-cap-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:3px;}
+.lead-cap-sub{font-size:12.5px;color:var(--t3);margin-bottom:18px;}
+
+/* ── FUNNEL ───────────────────────────────────────────── */
+.fn-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--b);}
+.fn-row:last-child{border-bottom:none;}
+.fn-bar-bg{flex:1;height:7px;background:var(--bg5);border-radius:4px;overflow:hidden;}
+.fn-bar{height:100%;border-radius:4px;transition:width .5s ease;}
+
+/* ── COMMENTS ─────────────────────────────────────────── */
+.cmts{margin-top:16px;border-top:1px solid var(--b);padding-top:14px;}
+.cmts-hd{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
+.cmt{display:flex;gap:8px;margin-bottom:10px;}
+.cmt-body{flex:1;background:var(--bg3);border-radius:var(--r);padding:9px 11px;}
+.cmt-hdr{display:flex;justify-content:space-between;margin-bottom:4px;}
+.cmt-auth{font-size:12px;font-weight:500;}
+.cmt-ts{font-size:10px;color:var(--t3);}
+.cmt-txt{font-size:12.5px;color:var(--t2);line-height:1.5;}
+.cmt-in{flex:1;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:7px 11px;color:var(--t);font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:none;}
+.cmt-in:focus{border-color:var(--ink);}
+
+/* ── TABS ─────────────────────────────────────────────── */
+.tabs{display:flex;gap:2px;background:var(--bg3);border-radius:var(--r);padding:3px;}
+.tab{flex:1;text-align:center;padding:6px 10px;border-radius:5px;font-size:12.5px;cursor:pointer;color:var(--t3);transition:all .13s;white-space:nowrap;}
+.tab.active{background:var(--bg2);color:var(--t);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+
+/* ── MINI CHART ───────────────────────────────────────── */
+.chw{display:flex;align-items:flex-end;gap:5px;height:85px;}
+.chb{flex:1;border-radius:3px 3px 0 0;min-height:3px;opacity:.85;}
+.chl{display:flex;gap:5px;margin-top:5px;}
+.chlb{flex:1;text-align:center;font-size:10px;color:var(--t3);}
+
+/* ── AVATAR ───────────────────────────────────────────── */
+.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.av32{width:32px;height:32px;font-size:11px;}
+
+/* ── TOAST ────────────────────────────────────────────── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:10px 14px;font-size:13px;z-index:999;display:flex;align-items:center;gap:7px;animation:sli .2s ease;max-width:300px;pointer-events:none;}
+.toast-ok{border-left:3px solid var(--go);}
+.toast-err{border-left:3px solid var(--err);}
+@keyframes sli{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* ── LOADING ──────────────────────────────────────────── */
+.spin{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--ink);border-radius:50%;animation:rot .7s linear infinite;display:inline-block;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.loading{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--t3);gap:10px;font-size:13px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIGN IN ══════════════ -->
+<div class="auth-wrap" id="screen-signin">
+  <div class="auth-panel">
+    <div class="auth-logo">Nexus<span>CRM</span></div>
+    <div class="auth-sub">IT Operations Workspace</div>
+    <div class="auth-card">
+      <div class="auth-title">Sign in to your account</div>
+      <div class="auth-error" id="si-err"></div>
+      <div class="fg"><label class="fl">Work Email</label><input class="fi" id="si-email" type="email" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="si-password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn btn-p btn-full" id="si-btn" onclick="doSignIn()">Sign In</button>
+    </div>
+    <div class="auth-footer">Don't have an account? <a onclick="showScreen('signup')">Create one</a></div>
+  </div>
+</div>
+
+<!-- ══════════════ SIGN UP ══════════════ -->
+<div class="auth-wrap" id="screen-signup" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-logo">Nexus<span>CRM</span></div>
+    <div class="auth-sub">IT Operations Workspace</div>
+    <div class="auth-card">
+      <div class="auth-title">Create your account</div>
+      <div class="auth-error" id="su-err"></div>
+      <div class="fg"><label class="fl">Full Name</label><input class="fi" id="su-name" type="text" placeholder="Jane Smith" autocomplete="name"></div>
+      <div class="fg"><label class="fl">Work Email</label><input class="fi" id="su-email" type="email" placeholder="jane@company.com" autocomplete="email"></div>
+      <div class="fg"><label class="fl">Password <span style="color:var(--t3);font-weight:400">(min. 6 characters)</span></label><input class="fi" id="su-password" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+      <div class="fg"><label class="fl">Confirm Password</label><input class="fi" id="su-confirm" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-p btn-full" id="su-btn" onclick="doSignUp()">Create Account</button>
+    </div>
+    <div class="auth-footer">Already have an account? <a onclick="showScreen('signin')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app" style="display:none;height:100vh;flex-direction:column;">
+  <div class="topbar">
+    <div class="tb-logo">Nexus<span>CRM</span></div>
+    <div class="tb-nav">
+      <div class="tn active" id="tn-dash"     onclick="go('dash')">Dashboard</div>
+      <div class="tn" id="tn-leads"    onclick="go('leads')">Lead Capture</div>
+      <div class="tn" id="tn-contacts" onclick="go('contacts')">Contacts</div>
+      <div class="tn" id="tn-convert"  onclick="go('convert')">Conversion</div>
+      <div class="tn" id="tn-deals"    onclick="go('deals')">Pipeline</div>
+      <div class="tn" id="tn-tickets"  onclick="go('tickets')">Support</div>
+      <div class="tn" id="tn-vendors"  onclick="go('vendors')">Vendors</div>
+      <div class="tn" id="tn-tasks"    onclick="go('tasks')">Tasks</div>
+      <div class="tn" id="tn-notes"    onclick="go('notes')">Notes</div>
+    </div>
+    <div class="tb-right">
+      <div class="sync-pill"><div class="sdot" id="sdot"></div><span id="stxt">Ready</span></div>
+      <div class="user-chip" id="user-chip" onclick="doSignOut()">
+        <div class="udot"></div>
+        <span id="tb-user">—</span>
+        <span style="color:var(--t3);font-size:11px">· Sign out</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="main-panel">
+
+      <!-- DASHBOARD -->
+      <div id="pg-dash" class="page active">
+        <div class="sgrid" id="d-stats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div class="card"><div class="sh"><div class="st">Pipeline by Stage</div></div><div class="chw" id="d-chart"></div><div class="chl" id="d-labels"></div></div>
+          <div class="card"><div class="sh"><div class="st">Team Members</div></div><div id="d-team"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><div class="sh"><div class="st">Open Tickets</div><button class="btn btn-g btn-sm" onclick="go('tickets')">View all</button></div><div id="d-tickets"></div></div>
+          <div class="card"><div class="sh"><div class="st">My Tasks</div><button class="btn btn-g btn-sm" onclick="go('tasks')">View all</button></div><div id="d-tasks"></div></div>
+        </div>
+      </div>
+
+      <!-- LEAD CAPTURE -->
+      <div id="pg-leads" class="page">
+        <div class="lead-cap">
+          <div class="lead-cap-title">Capture New Lead</div>
+          <div class="lead-cap-sub">Fill in what you know. The more detail, the better the lead score.</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Full Name *</label><input class="fi" id="lf-name" placeholder="John Doe"></div>
+            <div class="fg"><label class="fl">Company</label><input class="fi" id="lf-company" placeholder="Acme Corp"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Email</label><input class="fi" id="lf-email" type="email"></div>
+            <div class="fg"><label class="fl">Phone</label><input class="fi" id="lf-phone"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Source</label>
+              <select class="fsel" id="lf-source">
+                <option value="website">Website</option><option value="referral">Referral</option>
+                <option value="cold-call">Cold Call</option><option value="social">Social Media</option>
+                <option value="event">Event</option><option value="other">Other</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Est. Value ($)</label><input class="fi" id="lf-value" type="number" placeholder="5000"></div>
+          </div>
+          <div class="fg"><label class="fl">Notes / Initial Interest</label><textarea class="fta" id="lf-notes" placeholder="What are they looking for?"></textarea></div>
+          <button class="btn btn-p" onclick="captureLead()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Save Lead
+          </button>
+        </div>
+        <div class="sh"><div class="st">All Leads</div></div>
+        <div class="tw"><table><thead><tr><th>Name</th><th>Company</th><th>Source</th><th>Est. Value</th><th>Score</th><th>Captured by</th><th>Actions</th></tr></thead><tbody id="leads-tbody"></tbody></table></div>
+      </div>
+
+      <!-- CONTACTS -->
+      <div id="pg-contacts" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="sw"><svg class="si" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sin" id="csearch" placeholder="Search…" oninput="renderContacts()"></div>
+          <button class="btn btn-p" onclick="openAddContact()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Contact</button>
+        </div>
+        <div class="tw"><table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Status</th><th>Added by</th><th>Actions</th></tr></thead><tbody id="contacts-tbody"></tbody></table></div>
+      </div>
+
+      <!-- CONVERSION -->
+      <div id="pg-convert" class="page">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+          <div class="card"><div class="sh"><div class="st">Conversion Funnel</div></div><div id="fn-viz"></div></div>
+          <div class="card">
+            <div class="sh"><div class="st">Convert Lead → Client</div></div>
+            <p style="font-size:12.5px;color:var(--t2);margin-bottom:14px">Select a lead to promote them to a contact and create an initial deal.</p>
+            <div class="fg"><label class="fl">Lead</label><select class="fsel" id="cv-lead"></select></div>
+            <div class="fg"><label class="fl">Deal Name</label><input class="fi" id="cv-deal" placeholder="e.g. Onboarding Package"></div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Deal Value ($)</label><input class="fi" id="cv-val" type="number"></div>
+              <div class="fg"><label class="fl">Stage</label><select class="fsel" id="cv-stage"><option>Qualified</option><option>Proposal</option><option>Negotiation</option></select></div>
+            </div>
+            <button class="btn btn-ok" onclick="doConvert()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Convert to Client
+            </button>
+          </div>
+        </div>
+        <div class="sh"><div class="st">Conversion History</div></div>
+        <div class="tw"><table><thead><tr><th>Lead</th><th>Company</th><th>Deal Created</th><th>Value</th><th>Converted by</th><th>Date</th></tr></thead><tbody id="cv-tbody"></tbody></table></div>
+      </div>
+
+      <!-- DEALS -->
+      <div id="pg-deals" class="page">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <button class="btn btn-p" onclick="openAddDeal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Deal</button>
+        </div>
+        <div class="pipe" id="pipe-board"></div>
+      </div>
+
+      <!-- TICKETS -->
+      <div id="pg-tickets" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="tabs" style="width:370px">
+            <div class="tab active" id="ttab-all"         onclick="fTicket('all')">All</div>
+            <div class="tab" id="ttab-open"       onclick="fTicket('open')">Open</div>
+            <div class="tab" id="ttab-in-progress" onclick="fTicket('in-progress')">In Progress</div>
+            <div class="tab" id="ttab-resolved"   onclick="fTicket('resolved')">Resolved</div>
+          </div>
+          <button class="btn btn-p" onclick="openAddTicket()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Ticket</button>
+        </div>
+        <div class="tw"><div id="tickets-list"></div></div>
+      </div>
+
+      <!-- VENDORS -->
+      <div id="pg-vendors" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="sw"><svg class="si" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sin" id="vsearch" placeholder="Search…" oninput="renderVendors()"></div>
+          <button class="btn btn-p" onclick="openAddVendor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Vendor</button>
+        </div>
+        <div id="vendors-list"></div>
+      </div>
+
+      <!-- TASKS -->
+      <div id="pg-tasks" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="tabs" style="width:270px">
+            <div class="tab active" id="tab-all"     onclick="fTask('all')">All</div>
+            <div class="tab" id="tab-pending" onclick="fTask('pending')">Pending</div>
+            <div class="tab" id="tab-done"    onclick="fTask('done')">Done</div>
+          </div>
+          <button class="btn btn-p" onclick="openAddTask()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Task</button>
+        </div>
+        <div class="tw"><div id="tasks-list"></div></div>
+      </div>
+
+      <!-- NOTES -->
+      <div id="pg-notes" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="sw"><svg class="si" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sin" id="nsearch" placeholder="Search…" oninput="renderNotes()"></div>
+          <button class="btn btn-p" onclick="openAddNote()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Note</button>
+        </div>
+        <div class="tw"><div id="notes-list"></div></div>
+      </div>
+
+    </div><!-- /main-panel -->
+
+    <!-- ACTIVITY FEED -->
+    <div class="act-panel">
+      <div class="ap-head"><span>Activity Feed</span><span class="bx bx-gr" id="act-cnt" style="font-size:10px"></span></div>
+      <div class="ap-body" id="act-feed"><div class="loading"><div class="spin"></div>Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="mo" style="display:none" onclick="if(event.target===this)closeMo()">
+  <div class="mb" id="mbox"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG — set this to your server URL
+// ════════════════════════════════════════════════════════════
+const API = 'http://localhost:3001/api';
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let TOKEN = localStorage.getItem('crm_token') || null;
+let CU    = JSON.parse(localStorage.getItem('crm_user') || 'null');
+
+// Local data cache
+let DATA = { contacts:[], leads:[], deals:[], tickets:[], vendors:[], tasks:[], notes:[], conversions:[], activity:[], team:[] };
+let curPage = 'dash';
+var ticketFilter = 'all';
+var taskFilter   = 'all';
+
+const STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost'];
+const SC = { Lead:'var(--t3)', Qualified:'var(--sky)', Proposal:'var(--warn)', Negotiation:'var(--ink2)', 'Closed Won':'var(--go)', 'Closed Lost':'var(--err)' };
+const UCOLS = ['#5c6bc0','#26a69a','#f59e0b','#29b6f6','#ef5350','#ab47bc'];
+
+// ════════════════════════════════════════════════════════════
+// API HELPERS
+// ════════════════════════════════════════════════════════════
+async function api(method, path, body) {
+  setSyn(true);
+  try {
+    const res = await fetch(API + path, {
+      method,
+      headers: { 'Content-Type':'application/json', 'Authorization': TOKEN ? `Bearer ${TOKEN}` : '' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  } finally {
+    setSyn(false);
+  }
+}
+function setSyn(v){ document.getElementById('sdot').classList.toggle('busy',v); document.getElementById('stxt').textContent = v ? 'Saving…' : 'Saved'; }
+
+// ════════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════════
+function showScreen(name) {
+  document.getElementById('screen-signin').style.display = name==='signin' ? 'flex' : 'none';
+  document.getElementById('screen-signup').style.display = name==='signup' ? 'flex' : 'none';
+}
+
+async function doSignIn() {
+  const email    = document.getElementById('si-email').value.trim();
+  const password = document.getElementById('si-password').value;
+  const errEl    = document.getElementById('si-err');
+  const btn      = document.getElementById('si-btn');
+  errEl.style.display = 'none';
+  if (!email || !password) { showErr(errEl, 'Please enter your email and password'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const data = await api('POST', '/auth/signin', { email, password });
+    setSession(data.token, data.user);
+    launchApp();
+  } catch(e) {
+    showErr(errEl, e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function doSignUp() {
+  const name     = document.getElementById('su-name').value.trim();
+  const email    = document.getElementById('su-email').value.trim();
+  const password = document.getElementById('su-password').value;
+  const confirm  = document.getElementById('su-confirm').value;
+  const errEl    = document.getElementById('su-err');
+  const btn      = document.getElementById('su-btn');
+  errEl.style.display = 'none';
+  if (!name || !email || !password) { showErr(errEl, 'All fields are required'); return; }
+  if (password !== confirm)         { showErr(errEl, 'Passwords do not match'); return; }
+  if (password.length < 6)         { showErr(errEl, 'Password must be at least 6 characters'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  try {
+    const data = await api('POST', '/auth/signup', { name, email, password });
+    setSession(data.token, data.user);
+    launchApp();
+  } catch(e) {
+    showErr(errEl, e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+function setSession(token, user) {
+  TOKEN = token; CU = user;
+  localStorage.setItem('crm_token', token);
+  localStorage.setItem('crm_user', JSON.stringify(user));
+}
+
+function doSignOut() {
+  if (!confirm('Sign out?')) return;
+  TOKEN = null; CU = null;
+  localStorage.removeItem('crm_token');
+  localStorage.removeItem('crm_user');
+  document.getElementById('app').style.display = 'none';
+  showScreen('signin');
+}
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+// ════════════════════════════════════════════════════════════
+// APP LAUNCH
+// ════════════════════════════════════════════════════════════
+async function launchApp() {
+  showScreen('__none__');
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('tb-user').textContent = CU.name;
+  await loadAll();
+  go('dash');
+  setInterval(loadActivity, 15000); // refresh activity every 15s
+}
+
+async function loadAll() {
+  const [contacts, leads, deals, tickets, vendors, tasks, notes, conversions, activity, team] = await Promise.all([
+    api('GET','/contacts'), api('GET','/leads'), api('GET','/deals'),
+    api('GET','/tickets'), api('GET','/vendors'), api('GET','/tasks'),
+    api('GET','/notes'), api('GET','/conversions'), api('GET','/activity'),
+    api('GET','/team')
+  ]);
+  DATA = { contacts, leads, deals, tickets, vendors, tasks, notes, conversions, activity, team };
+  renderAll();
+}
+
+async function loadActivity() {
+  try { DATA.activity = await api('GET','/activity'); renderActivity(); } catch(e) {}
+}
+
+function renderAll() {
+  renderPage(curPage);
+  renderActivity();
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tn').forEach(n => n.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  const tn = document.getElementById('tn-'+page);
+  if (tn) tn.classList.add('active');
+  curPage = page;
+  renderPage(page);
+}
+
+function renderPage(p) {
+  if (p==='dash')     renderDash();
+  if (p==='leads')    renderLeads();
+  if (p==='contacts') renderContacts();
+  if (p==='convert')  renderConvert();
+  if (p==='deals')    renderDeals();
+  if (p==='tickets')  renderTickets();
+  if (p==='vendors')  renderVendors();
+  if (p==='tasks')    renderTasks();
+  if (p==='notes')    renderNotes();
+}
+
+// ════════════════════════════════════════════════════════════
+// ACTIVITY FEED
+// ════════════════════════════════════════════════════════════
+function renderActivity() {
+  const feed = document.getElementById('act-feed');
+  const cnt  = document.getElementById('act-cnt');
+  if (!DATA.activity.length) { feed.innerHTML='<div class="empty-state">No activity yet</div>'; return; }
+  cnt.textContent = DATA.activity.length;
+  feed.innerHTML = DATA.activity.slice(0,60).map(a => {
+    const col = ucol(a.user_name);
+    const ini = (a.user_name||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    return `<div class="ai"><div class="ai-row">
+      <div class="ai-av" style="background:${col}22;color:${col}">${ini}</div>
+      <div><div class="ai-txt"><strong>${a.user_name}</strong> ${a.action}${a.target?' <span style="color:var(--ink2)">'+a.target+'</span>':''}</div>
+      <div class="ai-ts">${ago(a.created_at)}</div></div>
+    </div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+function renderDash() {
+  const openT = DATA.tickets.filter(t=>t.status!=='resolved').length;
+  const openD = DATA.deals.filter(d=>d.stage!=='Closed Won'&&d.stage!=='Closed Lost').length;
+  const pipeV = DATA.deals.filter(d=>d.stage!=='Closed Lost').reduce((a,b)=>a+Number(b.value),0);
+  document.getElementById('d-stats').innerHTML = `
+    <div class="sc sc-ink"><div class="sc-l">Contacts</div><div class="sc-v">${DATA.contacts.length}</div><div class="sc-s">In database</div></div>
+    <div class="sc sc-sky"><div class="sc-l">Open Leads</div><div class="sc-v">${DATA.leads.length}</div><div class="sc-s">Awaiting conversion</div></div>
+    <div class="sc sc-go"><div class="sc-l">Pipeline</div><div class="sc-v">$${(pipeV/1000).toFixed(0)}k</div><div class="sc-s">${openD} active deals</div></div>
+    <div class="sc sc-warn"><div class="sc-l">Open Tickets</div><div class="sc-v">${openT}</div><div class="sc-s">Needs attention</div></div>
+    <div class="sc sc-err"><div class="sc-l">Vendors</div><div class="sc-v">${DATA.vendors.length}</div><div class="sc-s">${DATA.vendors.filter(v=>v.status==='active').length} active</div></div>
+    <div class="sc"><div class="sc-l">Conversions</div><div class="sc-v">${DATA.conversions.length}</div><div class="sc-s">Leads converted</div></div>`;
+
+  const sm = {}; STAGES.slice(0,5).forEach(s=>sm[s]=0);
+  DATA.deals.forEach(d=>{if(sm[d.stage]!==undefined)sm[d.stage]++;});
+  const mx = Math.max(...Object.values(sm),1);
+  document.getElementById('d-chart').innerHTML = Object.entries(sm).map(([s,c])=>`<div class="chb" style="height:${Math.max((c/mx)*80,3)}px;background:${SC[s]}"></div>`).join('');
+  document.getElementById('d-labels').innerHTML = Object.keys(sm).map(s=>`<div class="chlb">${s.substring(0,4)}</div>`).join('');
+
+  document.getElementById('d-team').innerHTML = DATA.team.length
+    ? DATA.team.map(u=>`<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--b)">
+        <div class="av av32" style="background:${ucol(u.name)}22;color:${ucol(u.name)}">${ini(u.name)}</div>
+        <div><div style="font-size:13px;font-weight:500">${u.name}</div><div style="font-size:11px;color:var(--t3)">${u.email}</div></div>
+        <span class="bx bx-gr" style="margin-left:auto;font-size:10px">${u.role}</span>
+      </div>`).join('')
+    : '<div class="empty-state">No team members</div>';
+
+  document.getElementById('d-tickets').innerHTML = DATA.tickets.filter(t=>t.status!=='resolved').slice(0,3)
+    .map(t=>`<div style="padding:7px 0;border-bottom:1px solid var(--b);display:flex;gap:8px;align-items:center"><span class="${tkTypeCls(t.type)}">${t.type}</span><span style="font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</span>${tkStCls(t.status)}</div>`).join('')
+    || '<div class="empty-state" style="padding:12px">No open tickets</div>';
+
+  document.getElementById('d-tasks').innerHTML = DATA.tasks.filter(t=>!t.done).slice(0,4)
+    .map(t=>`<div class="ti"><div class="tck ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div><div style="flex:1"><div class="ttl">${t.title}</div><div class="tme"><span>${t.contact||''}</span><span>${t.due||''}</span>${priB(t.priority)}</div></div></div>`).join('')
+    || '<div class="empty-state" style="padding:12px">All caught up!</div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// LEADS
+// ════════════════════════════════════════════════════════════
+async function captureLead() {
+  const name = document.getElementById('lf-name').value.trim();
+  if (!name) return toast('Name is required','err');
+  const source = document.getElementById('lf-source').value;
+  const value  = Number(document.getElementById('lf-value').value)||0;
+  const notes  = document.getElementById('lf-notes').value.trim();
+  const score  = scoreLead(source, value, notes);
+  try {
+    const lead = await api('POST','/leads',{ name, company:v('lf-company'), email:v('lf-email'), phone:v('lf-phone'), source, value, notes, score });
+    DATA.leads.unshift(lead);
+    ['lf-name','lf-company','lf-email','lf-phone','lf-value','lf-notes'].forEach(id=>document.getElementById(id).value='');
+    renderLeads(); toast('Lead captured!');
+  } catch(e) { toast(e.message,'err'); }
+}
+function scoreLead(src,val,notes){ let s=20; if(src==='referral')s+=30;else if(src==='event')s+=20;else if(src==='website')s+=10; if(val>50000)s+=30;else if(val>10000)s+=20;else if(val>1000)s+=10; if(notes&&notes.length>20)s+=10; return Math.min(s,100); }
+function scoreBadge(s){ if(s>=75)return'<span class="bx bx-err">Hot</span>';if(s>=50)return'<span class="bx bx-warn">Warm</span>';return'<span class="bx bx-gr">Cold</span>'; }
+function renderLeads(){
+  const tb = document.getElementById('leads-tbody');
+  if(!DATA.leads.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--t3)">No leads yet — capture one above</td></tr>'; return; }
+  tb.innerHTML = DATA.leads.map(l=>`<tr>
+    <td style="font-weight:500">${l.name}</td><td class="td2">${l.company||'—'}</td>
+    <td><span class="bx bx-ink">${l.source||'—'}</span></td>
+    <td style="font-family:var(--mono);color:var(--go)">$${Number(l.value||0).toLocaleString()}</td>
+    <td>${scoreBadge(l.score||0)} <span style="font-size:10px;color:var(--t3)">${l.score||0}%</span></td>
+    <td class="td2" style="font-size:11.5px">${l.captured_by||'—'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-ok btn-xs" onclick="quickConvert(${l.id})">Convert</button>
+      <button class="btn btn-d btn-xs" onclick="deleteLead(${l.id})">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+async function deleteLead(id){
+  if(!confirm('Delete lead?'))return;
+  await api('DELETE',`/leads/${id}`);
+  DATA.leads = DATA.leads.filter(l=>l.id!==id);
+  renderLeads(); toast('Lead deleted');
+}
+function quickConvert(id){ go('convert'); setTimeout(()=>{ const sel=document.getElementById('cv-lead'); if(sel)sel.value=id; },100); }
+
+// ════════════════════════════════════════════════════════════
+// CONTACTS
+// ════════════════════════════════════════════════════════════
+function renderContacts(){
+  const q = (document.getElementById('csearch')?.value||'').toLowerCase();
+  const f = DATA.contacts.filter(c=>!q||c.name.toLowerCase().includes(q)||c.company?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q));
+  const tb = document.getElementById('contacts-tbody');
+  tb.innerHTML = f.length ? f.map(c=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:9px"><div class="av av32" style="background:${ucol(c.name)}22;color:${ucol(c.name)}">${ini(c.name)}</div><span style="font-weight:500">${c.name}</span></div></td>
+    <td class="td2">${c.company||'—'}</td><td class="td2">${c.email||'—'}</td><td class="td2">${c.phone||'—'}</td>
+    <td>${stBadge(c.status)}</td><td class="td2" style="font-size:11.5px">${c.added_by||'—'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-g btn-xs" onclick="openContactDetail(${c.id})">View</button>
+      <button class="btn btn-g btn-xs" onclick="openEditContact(${c.id})">Edit</button>
+      <button class="btn btn-d btn-xs" onclick="delContact(${c.id})">Del</button>
+    </div></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--t3)">No contacts found</td></tr>';
+}
+function stBadge(s){const m={client:'bx-go',lead:'bx-sky',prospect:'bx-warn',inactive:'bx-gr'};return`<span class="bx ${m[s]||'bx-gr'}">${s}</span>`;}
+function openContactDetail(id){
+  const c=DATA.contacts.find(x=>x.id===id);
+  showMo(c.name,`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Email</div>${c.email||'—'}</div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Phone</div>${c.phone||'—'}</div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Status</div>${stBadge(c.status)}</div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Added by</div>${c.added_by||'—'}</div>
+  </div><div id="cmt-area">Loading comments…</div>`,null,'Close',null,true);
+  loadCmts('contacts',id,'cmt-area');
+}
+function openAddContact(){
+  showMo('Add Contact',contactFm(),async()=>{
+    const f=gfd(['name','company','email','phone','status']);
+    if(!f.name)return alert('Name required');
+    const c=await api('POST','/contacts',f);
+    DATA.contacts.unshift(c);closeMo();renderContacts();toast('Contact added');
+  },'Add Contact');
+}
+function openEditContact(id){
+  const c=DATA.contacts.find(x=>x.id===id);
+  showMo('Edit Contact',contactFm(c),async()=>{
+    const f=gfd(['name','company','email','phone','status']);
+    const updated=await api('PUT',`/contacts/${id}`,f);
+    Object.assign(c,updated);closeMo();renderContacts();toast('Updated');
+  },'Save');
+}
+async function delContact(id){
+  if(!confirm('Delete contact?'))return;
+  await api('DELETE',`/contacts/${id}`);
+  DATA.contacts=DATA.contacts.filter(x=>x.id!==id);renderContacts();toast('Deleted');
+}
+function contactFm(c={}){ return `<div class="frow"><div class="fg"><label class="fl">Name *</label><input class="fi" id="f-name" value="${c.name||''}"></div><div class="fg"><label class="fl">Company</label><input class="fi" id="f-company" value="${c.company||''}"></div></div><div class="frow"><div class="fg"><label class="fl">Email</label><input class="fi" id="f-email" value="${c.email||''}"></div><div class="fg"><label class="fl">Phone</label><input class="fi" id="f-phone" value="${c.phone||''}"></div></div><div class="fg"><label class="fl">Status</label><select class="fsel" id="f-status">${['lead','prospect','client','inactive'].map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}</select></div>`; }
+
+// ════════════════════════════════════════════════════════════
+// CONVERSION
+// ════════════════════════════════════════════════════════════
+function renderConvert(){
+  const total=[DATA.contacts.length,DATA.contacts.filter(c=>c.status==='prospect').length,DATA.contacts.filter(c=>c.status==='client').length];
+  const stages=[{l:'Leads Captured',n:DATA.leads.length,c:'var(--sky)'},{l:'All Contacts',n:DATA.contacts.length,c:'var(--ink2)'},{l:'Prospects',n:total[1],c:'var(--warn)'},{l:'Clients',n:total[2],c:'var(--go)'}];
+  const mx=Math.max(...stages.map(s=>s.n),1);
+  document.getElementById('fn-viz').innerHTML=stages.map(s=>`<div class="fn-row"><div style="width:120px;font-size:12.5px;color:var(--t2)">${s.l}</div><div class="fn-bar-bg"><div class="fn-bar" style="width:${Math.max((s.n/mx)*100,2)}%;background:${s.c}"></div></div><div style="width:32px;text-align:right;font-size:13px;font-weight:600;color:${s.c};font-family:var(--mono)">${s.n}</div></div>`).join('');
+  const sel=document.getElementById('cv-lead');
+  sel.innerHTML='<option value="">— Select a lead —</option>'+DATA.leads.map(l=>`<option value="${l.id}">${l.name}${l.company?' ('+l.company+')':''}</option>`).join('');
+  const tb=document.getElementById('cv-tbody');
+  tb.innerHTML=DATA.conversions.length?DATA.conversions.map(c=>`<tr><td style="font-weight:500">${c.lead_name}</td><td class="td2">${c.company||'—'}</td><td class="td2">${c.deal_name}</td><td style="color:var(--go);font-family:var(--mono)">$${Number(c.deal_value||0).toLocaleString()}</td><td class="td2" style="font-size:11.5px">${c.converted_by}</td><td class="td2" style="font-size:11.5px">${fmtDate(c.created_at)}</td></tr>`).join(''):`<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--t3)">No conversions yet</td></tr>`;
+}
+async function doConvert(){
+  const lid=Number(document.getElementById('cv-lead').value);
+  if(!lid)return toast('Please select a lead','err');
+  const dealName=document.getElementById('cv-deal').value.trim();
+  if(!dealName)return toast('Enter a deal name','err');
+  const lead=DATA.leads.find(l=>l.id===lid);
+  const dealValue=Number(document.getElementById('cv-val').value)||lead?.value||0;
+  try{
+    const conv=await api('POST','/conversions',{leadName:lead.name,company:lead.company||'',dealName,dealValue,leadId:lid});
+    DATA.conversions.unshift(conv);
+    DATA.leads=DATA.leads.filter(l=>l.id!==lid);
+    await Promise.all([api('GET','/contacts').then(r=>DATA.contacts=r),api('GET','/deals').then(r=>DATA.deals=r)]);
+    renderConvert();toast(`${lead.name} converted to client!`);
+    document.getElementById('cv-deal').value='';document.getElementById('cv-val').value='';
+  }catch(e){toast(e.message,'err');}
+}
+
+// ════════════════════════════════════════════════════════════
+// DEALS
+// ════════════════════════════════════════════════════════════
+function renderDeals(){
+  document.getElementById('pipe-board').innerHTML=STAGES.map(stage=>{
+    const deals=DATA.deals.filter(d=>d.stage===stage);
+    return `<div class="pc"><div class="ph"><span class="pht" style="color:${SC[stage]}">${stage}</span><span class="phc">${deals.length}</span></div>
+    ${deals.map(d=>`<div class="dc" onclick="openDealDetail(${d.id})"><div class="dn">${d.name}</div><div class="dco">${d.company||''}</div><div class="df"><span class="dv">$${Number(d.value||0).toLocaleString()}</span><span class="bx bx-gr">${d.probability}%</span></div><div style="font-size:10px;color:var(--t3);margin-top:4px">${d.owner||'—'}</div></div>`).join('')}
+    <button class="btn btn-g btn-sm" style="width:100%;margin-top:4px;justify-content:center" onclick="openAddDeal('${stage}')">+ Add</button></div>`;
+  }).join('');
+}
+function openDealDetail(id){
+  const d=DATA.deals.find(x=>x.id===id);
+  showMo(d.name,`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Value</div><div style="font-size:16px;font-weight:600;color:var(--go);font-family:var(--mono)">$${Number(d.value||0).toLocaleString()}</div></div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Stage</div><span class="bx bx-ink">${d.stage}</span></div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Contact</div>${d.contact||'—'}</div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Owner</div>${d.owner||'—'}</div>
+  </div><div style="display:flex;gap:7px;margin-bottom:4px"><button class="btn btn-g btn-sm" onclick="closeMo();openEditDeal(${id})">Edit</button><button class="btn btn-d btn-sm" onclick="delDeal(${id})">Delete</button></div>
+  <div id="cmt-area">Loading comments…</div>`,null,'Close',null,true);
+  loadCmts('deals',id,'cmt-area');
+}
+function openAddDeal(stage='Lead'){
+  showMo('Add Deal',dealFm({stage}),async()=>{
+    const f=gfd(['name','company','value','stage','probability','contact']);
+    if(!f.name)return alert('Name required');
+    const d=await api('POST','/deals',{...f,value:Number(f.value)||0,probability:Number(f.probability)||0});
+    DATA.deals.unshift(d);closeMo();renderDeals();toast('Deal added');
+  },'Add Deal');
+}
+function openEditDeal(id){
+  const d=DATA.deals.find(x=>x.id===id);
+  showMo('Edit Deal',dealFm(d),async()=>{
+    const f=gfd(['name','company','value','stage','probability','contact']);
+    const updated=await api('PUT',`/deals/${id}`,{...f,value:Number(f.value)||0,probability:Number(f.probability)||0});
+    Object.assign(d,updated);closeMo();renderDeals();toast('Updated');
+  },'Save');
+}
+async function delDeal(id){
+  if(!confirm('Delete deal?'))return;
+  await api('DELETE',`/deals/${id}`);
+  DATA.deals=DATA.deals.filter(x=>x.id!==id);closeMo();renderDeals();toast('Deleted');
+}
+function dealFm(d={}){
+  const cO=DATA.contacts.map(c=>`<option value="${c.name}" ${d.contact===c.name?'selected':''}>${c.name}</option>`).join('');
+  const sO=STAGES.map(s=>`<option value="${s}" ${d.stage===s?'selected':''}>${s}</option>`).join('');
+  return `<div class="frow"><div class="fg"><label class="fl">Deal Name *</label><input class="fi" id="f-name" value="${d.name||''}"></div><div class="fg"><label class="fl">Company</label><input class="fi" id="f-company" value="${d.company||''}"></div></div><div class="frow"><div class="fg"><label class="fl">Value ($)</label><input class="fi" id="f-value" type="number" value="${d.value||''}"></div><div class="fg"><label class="fl">Probability (%)</label><input class="fi" id="f-probability" type="number" min="0" max="100" value="${d.probability||0}"></div></div><div class="frow"><div class="fg"><label class="fl">Stage</label><select class="fsel" id="f-stage">${sO}</select></div><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact"><option value="">— None —</option>${cO}</select></div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// TICKETS
+// ════════════════════════════════════════════════════════════
+function fTicket(f){
+  ticketFilter=f;
+  ['all','open','in-progress','resolved'].forEach(t=>{const el=document.getElementById('ttab-'+t);if(el)el.classList.remove('active');});
+  const a=document.getElementById('ttab-'+f);if(a)a.classList.add('active');
+  renderTickets();
+}
+function renderTickets(){
+  let list=[...DATA.tickets];
+  if(ticketFilter!=='all')list=list.filter(t=>t.status===ticketFilter);
+  const el=document.getElementById('tickets-list');
+  if(!list.length){el.innerHTML='<div class="empty-state">No tickets in this view</div>';return;}
+  el.innerHTML=list.map(t=>`<div class="tki">
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;flex-shrink:0">
+      <span class="${tkTypeCls(t.type)}">${t.type}</span>
+      <span style="font-size:10px;font-weight:500;color:${t.priority==='high'?'var(--err)':t.priority==='medium'?'var(--warn)':'var(--t3)'}">${t.priority}</span>
+    </div>
+    <div class="tki-main">
+      <div class="tki-title">${t.title}</div>
+      <div class="tki-meta"><span>${t.contact||'—'}</span><span>Assigned: ${t.assignee||'Unassigned'}</span><span>${ago(t.created_at)}</span></div>
+      <div style="font-size:12.5px;color:var(--t2);margin-top:5px;line-height:1.5">${t.description||''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+      ${tkStCls(t.status)}
+      <div style="display:flex;gap:4px;margin-top:4px">
+        <button class="btn btn-g btn-xs" onclick="openTicketDetail(${t.id})">View</button>
+        <button class="btn btn-g btn-xs" onclick="openEditTicket(${t.id})">Edit</button>
+        <button class="btn btn-d btn-xs" onclick="delTicket(${t.id})">Del</button>
+      </div>
+      ${t.status!=='resolved'?`<button class="btn btn-ok btn-xs" onclick="resolveTicket(${t.id})">Resolve</button>`:''}
+    </div>
+  </div>`).join('');
+}
+function tkTypeCls(t){const m={bug:'bx bx-err',complaint:'bx bx-warn',inquiry:'bx bx-sky',other:'bx bx-gr'};return m[t]||'bx bx-gr';}
+function tkStCls(s){const m={open:'bx bx-err','in-progress':'bx bx-warn',resolved:'bx bx-go'};return`<span class="${m[s]||'bx bx-gr'}">${s}</span>`;}
+function openTicketDetail(id){
+  const t=DATA.tickets.find(x=>x.id===id);
+  showMo('Ticket — '+t.type,`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${tkStCls(t.status)} <span class="${tkTypeCls(t.type)}">${t.type}</span></div>
+  <div class="card-sm" style="margin-bottom:14px;line-height:1.6;color:var(--t2)">${t.description||'No description.'}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Contact</div>${t.contact||'—'}</div>
+    <div class="card-sm"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Assigned to</div>${t.assignee||'Unassigned'}</div>
+  </div>
+  ${t.status!=='resolved'?`<button class="btn btn-ok btn-sm" style="margin-bottom:12px" onclick="resolveTicket(${id})">Mark as Resolved</button>`:''}
+  <div id="cmt-area">Loading comments…</div>`,null,'Close',null,true);
+  loadCmts('tickets',id,'cmt-area');
+}
+function openAddTicket(){
+  showMo('New Ticket',ticketFm(),async()=>{
+    const f=gfd(['title','contact','type','priority','description','assignee']);
+    if(!f.title)return alert('Title required');
+    const t=await api('POST','/tickets',f);
+    DATA.tickets.unshift(t);closeMo();renderTickets();toast('Ticket created');
+  },'Create Ticket');
+}
+function openEditTicket(id){
+  const t=DATA.tickets.find(x=>x.id===id);
+  showMo('Edit Ticket',ticketFm(t),async()=>{
+    const f=gfd(['title','contact','type','priority','description','assignee']);
+    const updated=await api('PUT',`/tickets/${id}`,{...f,status:t.status});
+    Object.assign(t,updated);closeMo();renderTickets();toast('Updated');
+  },'Save');
+}
+async function resolveTicket(id){
+  const t=DATA.tickets.find(x=>x.id===id);if(!t)return;
+  const updated=await api('PUT',`/tickets/${id}`,{...t,status:'resolved'});
+  Object.assign(t,updated);closeMo();renderTickets();renderDash();toast('Ticket resolved');
+}
+async function delTicket(id){
+  if(!confirm('Delete ticket?'))return;
+  await api('DELETE',`/tickets/${id}`);
+  DATA.tickets=DATA.tickets.filter(x=>x.id!==id);renderTickets();toast('Deleted');
+}
+function ticketFm(t={}){
+  const cO=['—',...DATA.contacts.map(c=>c.name)].map(n=>`<option value="${n}" ${t.contact===n?'selected':''}>${n}</option>`).join('');
+  return `<div class="fg"><label class="fl">Title *</label><input class="fi" id="f-title" value="${t.title||''}"></div>
+  <div class="frow"><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact">${cO}</select></div><div class="fg"><label class="fl">Type</label><select class="fsel" id="f-type">${['inquiry','complaint','bug','other'].map(x=>`<option value="${x}" ${t.type===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select></div></div>
+  <div class="frow"><div class="fg"><label class="fl">Priority</label><select class="fsel" id="f-priority">${['high','medium','low'].map(x=>`<option value="${x}" ${t.priority===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select></div><div class="fg"><label class="fl">Assignee</label><input class="fi" id="f-assignee" value="${t.assignee||CU?.name||''}"></div></div>
+  <div class="fg"><label class="fl">Description</label><textarea class="fta" id="f-description">${t.description||''}</textarea></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// VENDORS
+// ════════════════════════════════════════════════════════════
+function renderVendors(){
+  const q=(document.getElementById('vsearch')?.value||'').toLowerCase();
+  const f=DATA.vendors.filter(v=>!q||v.name.toLowerCase().includes(q)||(v.category||'').toLowerCase().includes(q));
+  const el=document.getElementById('vendors-list');
+  if(!f.length){el.innerHTML='<div class="empty-state">No vendors yet</div>';return;}
+  el.innerHTML=f.map(v=>`<div class="vc">
+    <div class="vc-top"><div><div class="vc-name">${v.name}</div><div class="vc-cat">${v.category||''}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      ${v.status==='active'?'<span class="bx bx-go">Active</span>':v.status==='reviewing'?'<span class="bx bx-warn">Reviewing</span>':'<span class="bx bx-gr">Inactive</span>'}
+      <button class="btn btn-g btn-xs" onclick="openEditVendor(${v.id})">Edit</button>
+      <button class="btn btn-d btn-xs" onclick="delVendor(${v.id})">Del</button>
+    </div></div>
+    <div class="vc-info"><span style="color:var(--t3)">Contact: </span>${v.contact||'—'} &nbsp;·&nbsp; <span style="color:var(--t3)">Phone: </span>${v.phone||'—'} &nbsp;·&nbsp; <span style="color:var(--t3)">Contract: </span>${v.contract||'—'}</div>
+    ${v.notes?`<div style="font-size:12px;color:var(--t3);margin-top:5px">${v.notes}</div>`:''}
+  </div>`).join('');
+}
+function openAddVendor(){
+  showMo('Add Vendor',vendorFm(),async()=>{
+    const f=gfd(['name','category','contact','phone','status','contract','notes']);
+    if(!f.name)return alert('Name required');
+    const vend=await api('POST','/vendors',f);
+    DATA.vendors.unshift(vend);closeMo();renderVendors();toast('Vendor added');
+  },'Add Vendor');
+}
+function openEditVendor(id){
+  const vend=DATA.vendors.find(x=>x.id===id);
+  showMo('Edit Vendor',vendorFm(vend),async()=>{
+    const f=gfd(['name','category','contact','phone','status','contract','notes']);
+    const updated=await api('PUT',`/vendors/${id}`,f);
+    Object.assign(vend,updated);closeMo();renderVendors();toast('Updated');
+  },'Save');
+}
+async function delVendor(id){
+  if(!confirm('Delete vendor?'))return;
+  await api('DELETE',`/vendors/${id}`);
+  DATA.vendors=DATA.vendors.filter(x=>x.id!==id);renderVendors();toast('Deleted');
+}
+function vendorFm(v={}){ return `<div class="frow"><div class="fg"><label class="fl">Name *</label><input class="fi" id="f-name" value="${v.name||''}"></div><div class="fg"><label class="fl">Category</label><input class="fi" id="f-category" value="${v.category||''}"></div></div><div class="frow"><div class="fg"><label class="fl">Contact Email</label><input class="fi" id="f-contact" value="${v.contact||''}"></div><div class="fg"><label class="fl">Phone</label><input class="fi" id="f-phone" value="${v.phone||''}"></div></div><div class="frow"><div class="fg"><label class="fl">Status</label><select class="fsel" id="f-status">${['active','reviewing','inactive'].map(s=>`<option value="${s}" ${v.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}</select></div><div class="fg"><label class="fl">Contract</label><input class="fi" id="f-contract" value="${v.contract||''}"></div></div><div class="fg"><label class="fl">Notes</label><textarea class="fta" id="f-notes" style="min-height:65px">${v.notes||''}</textarea></div>`; }
+
+// ════════════════════════════════════════════════════════════
+// TASKS
+// ════════════════════════════════════════════════════════════
+function fTask(f){
+  taskFilter=f;
+  ['all','pending','done'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.classList.remove('active');});
+  const a=document.getElementById('tab-'+f);if(a)a.classList.add('active');
+  renderTasks();
+}
+function renderTasks(){
+  let list=[...DATA.tasks];
+  if(taskFilter==='pending')list=list.filter(t=>!t.done);
+  if(taskFilter==='done')list=list.filter(t=>t.done);
+  const el=document.getElementById('tasks-list');
+  if(!list.length){el.innerHTML='<div class="empty-state">No tasks here</div>';return;}
+  el.innerHTML=list.map(t=>`<div class="ti">
+    <div class="tck ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div>
+    <div style="flex:1"><div class="ttl ${t.done?'done':''}">${t.title}</div>
+    <div class="tme"><span>${t.contact||''}</span><span>${t.due||''}</span>${priB(t.priority)}<span style="color:var(--ink2)">${t.assigned_to||''}</span></div></div>
+    <div style="display:flex;gap:4px">
+      <button class="btn btn-g btn-xs" onclick="openEditTask(${t.id})">Edit</button>
+      <button class="btn btn-d btn-xs" onclick="delTask(${t.id})">Del</button>
+    </div>
+  </div>`).join('');
+}
+function priB(p){const m={high:'bx bx-err',medium:'bx bx-warn',low:'bx bx-gr'};return`<span class="${m[p]||'bx bx-gr'}" style="font-size:10px">${p||'low'}</span>`;}
+async function toggleTask(id){
+  const t=DATA.tasks.find(x=>x.id===id);if(!t)return;
+  t.done=!t.done;
+  await api('PUT',`/tasks/${id}`,{...t,done:t.done});
+  renderTasks();renderDash();
+}
+function openAddTask(){
+  showMo('Add Task',taskFm(),async()=>{
+    const f=gfd(['title','contact','due','priority']);
+    if(!f.title)return alert('Title required');
+    const t=await api('POST','/tasks',f);
+    DATA.tasks.unshift(t);closeMo();renderTasks();toast('Task added');
+  },'Add Task');
+}
+function openEditTask(id){
+  const t=DATA.tasks.find(x=>x.id===id);
+  showMo('Edit Task',taskFm(t),async()=>{
+    const f=gfd(['title','contact','due','priority']);
+    const updated=await api('PUT',`/tasks/${id}`,{...f,done:t.done});
+    Object.assign(t,updated);closeMo();renderTasks();toast('Updated');
+  },'Save');
+}
+async function delTask(id){
+  if(!confirm('Delete?'))return;
+  await api('DELETE',`/tasks/${id}`);
+  DATA.tasks=DATA.tasks.filter(x=>x.id!==id);renderTasks();toast('Deleted');
+}
+function taskFm(t={}){
+  const cO=DATA.contacts.map(c=>`<option value="${c.name}" ${t.contact===c.name?'selected':''}>${c.name}</option>`).join('');
+  return `<div class="fg"><label class="fl">Title *</label><input class="fi" id="f-title" value="${t.title||''}"></div><div class="frow"><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact"><option value="">— None —</option>${cO}</select></div><div class="fg"><label class="fl">Due Date</label><input class="fi" id="f-due" type="date" value="${t.due||''}"></div></div><div class="fg"><label class="fl">Priority</label><select class="fsel" id="f-priority">${['high','medium','low'].map(p=>`<option value="${p}" ${t.priority===p?'selected':''}>${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// NOTES
+// ════════════════════════════════════════════════════════════
+function renderNotes(){
+  const q=(document.getElementById('nsearch')?.value||'').toLowerCase();
+  const f=DATA.notes.filter(n=>!q||n.content.toLowerCase().includes(q)||(n.contact||'').toLowerCase().includes(q));
+  const el=document.getElementById('notes-list');
+  if(!f.length){el.innerHTML='<div class="empty-state">No notes yet</div>';return;}
+  el.innerHTML=f.map(n=>`<div class="ni"><div class="nc">${n.content}</div>
+    <div class="nm"><span style="font-weight:500;color:var(--t2)">${n.contact||''}</span><span>${n.date||''}</span><span class="bx bx-ink">${n.tag||'note'}</span><span style="color:var(--ink2);font-size:10px">${n.added_by||''}</span>
+    <span style="margin-left:auto;display:flex;gap:4px">
+      <button class="btn btn-g btn-xs" onclick="openNoteDetail(${n.id})">Comments</button>
+      <button class="btn btn-g btn-xs" onclick="openEditNote(${n.id})">Edit</button>
+      <button class="btn btn-d btn-xs" onclick="delNote(${n.id})">Del</button>
+    </span></div>
+  </div>`).join('');
+}
+function openNoteDetail(id){
+  const n=DATA.notes.find(x=>x.id===id);
+  showMo('Note',`<div class="card-sm" style="margin-bottom:14px;font-size:13.5px;line-height:1.65;color:var(--t2)">${n.content}</div><div id="cmt-area">Loading…</div>`,null,'Close',null,true);
+  loadCmts('notes',id,'cmt-area');
+}
+function openAddNote(){
+  showMo('Add Note',noteFm(),async()=>{
+    const f=gfd(['content','contact','date','tag']);
+    if(!f.content)return alert('Content required');
+    const n=await api('POST','/notes',f);
+    DATA.notes.unshift(n);closeMo();renderNotes();toast('Note added');
+  },'Add Note');
+}
+function openEditNote(id){
+  const n=DATA.notes.find(x=>x.id===id);
+  showMo('Edit Note',noteFm(n),async()=>{
+    const f=gfd(['content','contact','date','tag']);
+    const updated=await api('PUT',`/notes/${id}`,f);
+    Object.assign(n,updated);closeMo();renderNotes();toast('Updated');
+  },'Save');
+}
+async function delNote(id){
+  if(!confirm('Delete?'))return;
+  await api('DELETE',`/notes/${id}`);
+  DATA.notes=DATA.notes.filter(x=>x.id!==id);renderNotes();toast('Deleted');
+}
+function noteFm(n={}){
+  const today=new Date().toISOString().split('T')[0];
+  const cO=DATA.contacts.map(c=>`<option value="${c.name}" ${n.contact===c.name?'selected':''}>${c.name}</option>`).join('');
+  return `<div class="fg"><label class="fl">Note *</label><textarea class="fta" id="f-content">${n.content||''}</textarea></div><div class="frow"><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact"><option value="">— General —</option>${cO}</select></div><div class="fg"><label class="fl">Date</label><input class="fi" id="f-date" type="date" value="${n.date||today}"></div></div><div class="fg"><label class="fl">Tag</label><select class="fsel" id="f-tag">${['note','call','email','meeting'].map(t=>`<option value="${t}" ${n.tag===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// COMMENTS
+// ════════════════════════════════════════════════════════════
+async function loadCmts(type, id, elId) {
+  const el = document.getElementById(elId); if(!el) return;
+  const cmts = await api('GET', `/comments/${type}/${id}`);
+  el.outerHTML = cmtHTML(type, id, cmts);
+}
+function cmtHTML(type, id, cmts) {
+  return `<div class="cmts" id="cmt-${type}-${id}">
+    <div class="cmts-hd">Comments (${cmts.length})</div>
+    ${cmts.map(c=>{const col=ucol(c.user_name);const i=ini(c.user_name);return`<div class="cmt"><div class="ai-av" style="background:${col}22;color:${col};width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;flex-shrink:0">${i}</div><div class="cmt-body"><div class="cmt-hdr"><span class="cmt-auth">${c.user_name}</span><span class="cmt-ts">${ago(c.created_at)}</span></div><div class="cmt-txt">${c.text}</div></div></div>`;}).join('')}
+    ${!cmts.length?'<div style="font-size:12px;color:var(--t3);margin-bottom:10px">No comments yet.</div>':''}
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px">
+      <textarea class="cmt-in" id="ci-${type}-${id}" placeholder="Write a comment… (Enter to post)" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postCmt('${type}',${id})}"></textarea>
+      <button class="btn btn-p btn-sm" onclick="postCmt('${type}',${id})">Post</button>
+    </div>
+  </div>`;
+}
+async function postCmt(type, id) {
+  const el = document.getElementById(`ci-${type}-${id}`);
+  const text = (el?.value||'').trim(); if(!text) return;
+  const cmt = await api('POST', `/comments/${type}/${id}`, { text });
+  el.value = '';
+  const sec = document.getElementById(`cmt-${type}-${id}`);
+  if(sec){ const cmts = await api('GET', `/comments/${type}/${id}`); sec.outerHTML = cmtHTML(type, id, cmts); }
+  toast('Comment posted');
+}
+
+// ════════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════════
+function showMo(title, body, onOk, okLabel='Save', onDel=null, readOnly=false) {
+  const box = document.getElementById('mbox');
+  box.className = 'mb' + (readOnly?' mb-wide':'');
+  const foot = readOnly
+    ? `<div class="mfoot"><button class="btn btn-g" onclick="closeMo()">Close</button></div>`
+    : `<div class="mfoot">${onDel?`<button class="btn btn-d" onclick="window._mdel&&window._mdel()" style="margin-right:auto">Delete</button>`:''}<button class="btn btn-g" onclick="closeMo()">Cancel</button><button class="btn btn-p" onclick="window._mok&&window._mok()">${okLabel}</button></div>`;
+  box.innerHTML = `<div class="mh"><span class="mt">${title}</span><button class="mx" onclick="closeMo()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbody">${body}</div>${foot}`;
+  window._mok = onOk; window._mdel = onDel;
+  document.getElementById('modal').style.display = 'flex';
+  setTimeout(()=>box.querySelector('input,textarea')?.focus(), 80);
+}
+function closeMo() { document.getElementById('modal').style.display = 'none'; }
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function gfd(fields) { const r={}; fields.forEach(f=>{const el=document.getElementById('f-'+f);r[f]=el?el.value.trim():''}); return r; }
+function v(id) { return document.getElementById(id)?.value.trim()||''; }
+function ini(name) { return (name||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+function ucol(n) { let h=0; for(let c of (n||'')) h=(h*31+c.charCodeAt(0))&0xffffffff; return UCOLS[Math.abs(h)%UCOLS.length]; }
+function ago(ts) { if(!ts) return ''; const d=(Date.now()-new Date(ts).getTime())/1000; if(d<60) return 'just now'; if(d<3600) return Math.floor(d/60)+'m ago'; if(d<86400) return Math.floor(d/3600)+'h ago'; return Math.floor(d/86400)+'d ago'; }
+function fmtDate(ts) { if(!ts) return '—'; return new Date(ts).toLocaleDateString(); }
+function toast(msg, type='ok') {
+  const t=document.createElement('div');
+  t.className='toast toast-'+(type==='err'?'err':'ok');
+  t.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${type==='err'?'var(--err)':'var(--go)'}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${msg}`;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeMo(); });
+
+// Allow pressing Enter to submit on auth screens
+document.getElementById('si-password').addEventListener('keydown', e => { if(e.key==='Enter') doSignIn(); });
+document.getElementById('su-confirm').addEventListener('keydown',  e => { if(e.key==='Enter') doSignUp(); });
+
+// ════════════════════════════════════════════════════════════
+// INIT — auto-login if token exists
+// ════════════════════════════════════════════════════════════
+if (TOKEN && CU) {
+  launchApp();
+} else {
+  showScreen('signin');
+}
+</script>
+</body>
+</html>
