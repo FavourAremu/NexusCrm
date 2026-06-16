@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "NexusCRM",
+    "slug": "nexuscrm",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#07080a"
+    },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#5c6bc0",
+      "androidMode": "default",
+      "androidCollapsedTitle": "NexusCRM"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#5c6bc0"
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.nexuscrm"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#07080a"
+      },
+      "package": "com.yourcompany.nexuscrm",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "useNextNotificationsApi": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "acf55997-c33b-47de-afa3-873e05012f56"
+      }
+    }
+  }
+}
