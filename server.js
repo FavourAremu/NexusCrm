@@ -252,6 +252,24 @@ async function initDB() {
       created_at  TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+
+  // ─── Migrations for databases created before v1.1.0 ──────────
+  // "CREATE TABLE IF NOT EXISTS" does nothing if the table already exists,
+  // so columns added in this version must be added explicitly here.
+  // These are all safe to run repeatedly — they no-op if already applied.
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;`);
+
+  // Make sure at least one admin exists. If no admin is set yet (e.g. this
+  // database was created before roles existed), promote the earliest user.
+  const adminCheck = await pool.query(`SELECT COUNT(*) FROM users WHERE role = 'admin'`);
+  if (Number(adminCheck.rows[0].count) === 0) {
+    const oldest = await pool.query(`SELECT id, name FROM users ORDER BY created_at ASC LIMIT 1`);
+    if (oldest.rows[0]) {
+      await pool.query(`UPDATE users SET role = 'admin' WHERE id = $1`, [oldest.rows[0].id]);
+      console.log(`✅ Promoted existing user "${oldest.rows[0].name}" to admin (no admin existed)`);
+    }
+  }
+
   console.log('✅ Database tables ready');
 }
 
@@ -355,7 +373,7 @@ async function notifyTeam(title, body, data = {}, excludeUser = null) {
 }
 
 // ─── Email Notifications (Resend) ─────────────────────────────
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'NexusCRM <notifications@yourdomain.com>';
 
 /**
@@ -832,9 +850,99 @@ app.delete('/api/notifications', auth, async (req, res) => {
 // ════════════════════════════════════════════════════════════════
 // TEAM / USERS
 // ════════════════════════════════════════════════════════════════
+
+// GET /api/team — list all users (any authenticated user can see team)
 app.get('/api/team', auth, async (req, res) => {
-  const r = await pool.query('SELECT id, name, email, role, created_at FROM users ORDER BY created_at ASC');
+  const r = await pool.query('SELECT id, name, email, role, active, created_at FROM users ORDER BY created_at ASC');
   res.json(r.rows);
+});
+
+// ════════════════════════════════════════════════════════════════
+// ADMIN — USER MANAGEMENT (admin role required)
+// ════════════════════════════════════════════════════════════════
+
+// GET /api/admin/users — full user list with all fields
+app.get('/api/admin/users', adminAuth, async (req, res) => {
+  const r = await pool.query('SELECT id, name, email, role, active, created_at FROM users ORDER BY created_at ASC');
+  res.json(r.rows);
+});
+
+// PUT /api/admin/users/:id/disable — disable a user (they can no longer sign in)
+app.put('/api/admin/users/:id/disable', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  if (Number(id) === req.user.id)
+    return res.status(400).json({ error: 'You cannot disable your own account' });
+  const r = await pool.query(
+    'UPDATE users SET active=FALSE WHERE id=$1 RETURNING id, name, email, role, active',
+    [id]
+  );
+  if (!r.rows[0]) return res.status(404).json({ error: 'User not found' });
+  // Revoke all push tokens so they stop receiving notifications
+  await pool.query('DELETE FROM push_tokens WHERE user_id=$1', [id]);
+  await logActivity(req.user.name, 'disabled user', r.rows[0].name, 'admin');
+  res.json(r.rows[0]);
+});
+
+// PUT /api/admin/users/:id/enable — re-enable a disabled user
+app.put('/api/admin/users/:id/enable', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  const r = await pool.query(
+    'UPDATE users SET active=TRUE WHERE id=$1 RETURNING id, name, email, role, active',
+    [id]
+  );
+  if (!r.rows[0]) return res.status(404).json({ error: 'User not found' });
+  await logActivity(req.user.name, 'enabled user', r.rows[0].name, 'admin');
+  res.json(r.rows[0]);
+});
+
+// PUT /api/admin/users/:id/role — change a user's role (member <-> admin)
+app.put('/api/admin/users/:id/role', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+  if (!['admin','member'].includes(role))
+    return res.status(400).json({ error: 'Role must be admin or member' });
+  if (Number(id) === req.user.id)
+    return res.status(400).json({ error: 'You cannot change your own role' });
+  const r = await pool.query(
+    'UPDATE users SET role=$1 WHERE id=$2 RETURNING id, name, email, role, active',
+    [role, id]
+  );
+  if (!r.rows[0]) return res.status(404).json({ error: 'User not found' });
+  await logActivity(req.user.name, `changed ${r.rows[0].name}'s role to`, role, 'admin');
+  res.json(r.rows[0]);
+});
+
+// DELETE /api/admin/users/:id — permanently delete a user and all their data
+app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  if (Number(id) === req.user.id)
+    return res.status(400).json({ error: 'You cannot delete your own account' });
+  const r = await pool.query('SELECT name FROM users WHERE id=$1', [id]);
+  if (!r.rows[0]) return res.status(404).json({ error: 'User not found' });
+  const name = r.rows[0].name;
+  await pool.query('DELETE FROM users WHERE id=$1', [id]); // cascades to push_tokens
+  await logActivity(req.user.name, 'deleted user', name, 'admin');
+  res.json({ ok: true, deleted: name });
+});
+
+// GET /api/admin/stats — system-wide stats for the admin panel
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+  const [users, contacts, leads, deals, tickets, activity] = await Promise.all([
+    pool.query('SELECT COUNT(*) FROM users'),
+    pool.query('SELECT COUNT(*) FROM contacts'),
+    pool.query('SELECT COUNT(*) FROM leads'),
+    pool.query('SELECT COUNT(*) FROM deals WHERE stage NOT IN (\'Closed Won\',\'Closed Lost\')'),
+    pool.query('SELECT COUNT(*) FROM tickets WHERE status != \'resolved\''),
+    pool.query('SELECT * FROM activity ORDER BY created_at DESC LIMIT 20'),
+  ]);
+  res.json({
+    users:    Number(users.rows[0].count),
+    contacts: Number(contacts.rows[0].count),
+    leads:    Number(leads.rows[0].count),
+    openDeals: Number(deals.rows[0].count),
+    openTickets: Number(tickets.rows[0].count),
+    recentActivity: activity.rows,
+  });
 });
 
 // ════════════════════════════════════════════════════════════════
