@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NexusCRM</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── TOKENS ─────────────────────────────────────────── */
 :root {
@@ -36,10 +34,10 @@
   --sky:   #29b6f6;
   --skybg: rgba(41,182,246,.1);
   --r:6px; --rl:10px; --rxl:15px;
-  --mono: 'JetBrains Mono', monospace;
+  --mono: 'Courier New', Courier, monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);font-size:14px;overflow:hidden;}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:var(--bg);color:var(--t);font-size:14px;overflow:hidden;}
 *{scrollbar-width:thin;scrollbar-color:var(--b3) transparent;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
@@ -47,7 +45,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 /* ── AUTH SCREENS ───────────────────────────────────── */
 .auth-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900;}
 .auth-panel{width:420px;max-width:95vw;}
-.auth-logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.8px;margin-bottom:4px;text-align:center;}
+.auth-logo{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.8px;margin-bottom:4px;text-align:center;}
 .auth-logo span{color:var(--ink2);}
 .auth-sub{text-align:center;font-size:13px;color:var(--t3);margin-bottom:32px;}
 .auth-card{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--rxl);padding:28px 32px;}
@@ -60,7 +58,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 /* ── FORM ELEMENTS ───────────────────────────────────── */
 .fg{margin-bottom:14px;}
 .fl{display:block;font-size:11.5px;font-weight:500;color:var(--t2);margin-bottom:5px;letter-spacing:.2px;}
-.fi,.fsel,.fta{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:9px 12px;color:var(--t);font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+.fi,.fsel,.fta{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:9px 12px;color:var(--t);font-size:13.5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;outline:none;transition:border-color .15s;}
 .fi:focus,.fsel:focus,.fta:focus{border-color:var(--ink);}
 .fi::placeholder{color:var(--t3);}
 .fsel{appearance:none;cursor:pointer;}
@@ -69,7 +67,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 select option{background:var(--bg3);}
 
 /* ── BUTTONS ─────────────────────────────────────────── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .13s;font-family:'Inter',sans-serif;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .13s;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
 .btn svg{width:13px;height:13px;flex-shrink:0;}
 .btn-p{background:var(--ink);color:#fff;}.btn-p:hover{background:var(--ink2);}
 .btn-g{background:transparent;color:var(--t2);border:1px solid var(--b);}.btn-g:hover{background:var(--bg3);color:var(--t);}
@@ -83,7 +81,7 @@ select option{background:var(--bg3);}
 /* ── APP SHELL ───────────────────────────────────────── */
 #app{display:none;height:100vh;flex-direction:column;}
 .topbar{height:50px;background:var(--bg2);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px;gap:0;flex-shrink:0;}
-.tb-logo{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;letter-spacing:-.5px;margin-right:18px;white-space:nowrap;flex-shrink:0;}
+.tb-logo{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;letter-spacing:-.5px;margin-right:18px;white-space:nowrap;flex-shrink:0;}
 .tb-logo span{color:var(--ink2);}
 .tb-nav{display:flex;gap:1px;flex:1;overflow-x:auto;}
 .tb-nav::-webkit-scrollbar{height:0;}
@@ -310,6 +308,7 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
       <div class="tn" id="tn-vendors"  onclick="go('vendors')">Vendors</div>
       <div class="tn" id="tn-tasks"    onclick="go('tasks')">Tasks</div>
       <div class="tn" id="tn-notes"    onclick="go('notes')">Notes</div>
+      <div class="tn" id="tn-admin" onclick="go('admin')" style="display:none">⚙ Admin</div>
     </div>
     <div class="tb-right">
       <div class="sync-pill"><div class="sdot" id="sdot"></div><span id="stxt">Ready</span></div>
@@ -455,6 +454,22 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
         <div class="tw"><div id="notes-list"></div></div>
       </div>
 
+      <!-- ADMIN -->
+      <div id="pg-admin" class="page">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <span class="bx bx-warn" style="font-size:12px;font-weight:700;padding:5px 10px">⚙ ADMIN PANEL</span>
+        </div>
+        <div class="sgrid" id="admin-stats" style="margin-bottom:20px"></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="sh"><div class="st" id="admin-user-count">Team Members</div></div>
+          <div id="admin-users-list"></div>
+        </div>
+        <div class="card">
+          <div class="sh"><div class="st">Recent Activity</div></div>
+          <div id="admin-activity-list"></div>
+        </div>
+      </div>
+
     </div><!-- /main-panel -->
 
     <!-- ACTIVITY FEED -->
@@ -586,6 +601,9 @@ async function launchApp() {
   showScreen('__none__');
   document.getElementById('app').style.display = 'flex';
   document.getElementById('tb-user').textContent = CU.name;
+  if (CU.role === 'admin') {
+    document.getElementById('tn-admin').style.display = '';
+  }
   await loadAll();
   go('dash');
   setInterval(loadActivity, 15000); // refresh activity every 15s
@@ -634,6 +652,7 @@ function renderPage(p) {
   if (p==='vendors')  renderVendors();
   if (p==='tasks')    renderTasks();
   if (p==='notes')    renderNotes();
+  if (p==='admin')    renderAdmin();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -943,9 +962,11 @@ async function delTicket(id){
 }
 function ticketFm(t={}){
   const cO=['—',...DATA.contacts.map(c=>c.name)].map(n=>`<option value="${n}" ${t.contact===n?'selected':''}>${n}</option>`).join('');
+  const activeTeam=(DATA.team||[]).filter(u=>u.active!==false);
+  const aO=(activeTeam.length?activeTeam.map(u=>u.name):[CU?.name||'']).map(n=>`<option value="${n}" ${(t.assignee||CU?.name)===n?'selected':''}>${n}</option>`).join('');
   return `<div class="fg"><label class="fl">Title *</label><input class="fi" id="f-title" value="${t.title||''}"></div>
   <div class="frow"><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact">${cO}</select></div><div class="fg"><label class="fl">Type</label><select class="fsel" id="f-type">${['inquiry','complaint','bug','other'].map(x=>`<option value="${x}" ${t.type===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select></div></div>
-  <div class="frow"><div class="fg"><label class="fl">Priority</label><select class="fsel" id="f-priority">${['high','medium','low'].map(x=>`<option value="${x}" ${t.priority===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select></div><div class="fg"><label class="fl">Assignee</label><input class="fi" id="f-assignee" value="${t.assignee||CU?.name||''}"></div></div>
+  <div class="frow"><div class="fg"><label class="fl">Priority</label><select class="fsel" id="f-priority">${['high','medium','low'].map(x=>`<option value="${x}" ${t.priority===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select></div><div class="fg"><label class="fl">Assignee</label><select class="fsel" id="f-assignee">${aO}</select></div></div>
   <div class="fg"><label class="fl">Description</label><textarea class="fta" id="f-description">${t.description||''}</textarea></div>`;
 }
 
@@ -1096,6 +1117,98 @@ function noteFm(n={}){
   const today=new Date().toISOString().split('T')[0];
   const cO=DATA.contacts.map(c=>`<option value="${c.name}" ${n.contact===c.name?'selected':''}>${c.name}</option>`).join('');
   return `<div class="fg"><label class="fl">Note *</label><textarea class="fta" id="f-content">${n.content||''}</textarea></div><div class="frow"><div class="fg"><label class="fl">Contact</label><select class="fsel" id="f-contact"><option value="">— General —</option>${cO}</select></div><div class="fg"><label class="fl">Date</label><input class="fi" id="f-date" type="date" value="${n.date||today}"></div></div><div class="fg"><label class="fl">Tag</label><select class="fsel" id="f-tag">${['note','call','email','meeting'].map(t=>`<option value="${t}" ${n.tag===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ════════════════════════════════════════════════════════════
+async function renderAdmin(){
+  if (CU.role !== 'admin') {
+    document.getElementById('pg-admin').innerHTML = '<div class="empty-state">Admin access required</div>';
+    return;
+  }
+  try {
+    const [users, stats] = await Promise.all([
+      api('GET','/admin/users'),
+      api('GET','/admin/stats'),
+    ]);
+    renderAdminStats(stats);
+    renderAdminUsers(users);
+    renderAdminActivity(stats.recentActivity||[]);
+  } catch(e) { toast(e.message,'err'); }
+}
+
+function renderAdminStats(stats){
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="sc sc-ink"><div class="sc-l">Total Users</div><div class="sc-v">${stats.users}</div></div>
+    <div class="sc sc-go"><div class="sc-l">Contacts</div><div class="sc-v">${stats.contacts}</div></div>
+    <div class="sc sc-sky"><div class="sc-l">Open Leads</div><div class="sc-v">${stats.leads}</div></div>
+    <div class="sc sc-warn"><div class="sc-l">Active Deals</div><div class="sc-v">${stats.openDeals}</div></div>
+    <div class="sc sc-err"><div class="sc-l">Open Tickets</div><div class="sc-v">${stats.openTickets}</div></div>`;
+}
+
+function renderAdminUsers(users){
+  document.getElementById('admin-user-count').textContent = `Team Members (${users.length})`;
+  document.getElementById('admin-users-list').innerHTML = users.map(u=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--b)">
+      <div class="av av32" style="background:${ucol(u.name)}22;color:${ucol(u.name)}">${ini(u.name)}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:13.5px;font-weight:600;color:${u.active===false?'var(--t3)':'var(--t)'}">${u.name}</span>
+          ${u.active===false?'<span class="bx bx-err">Disabled</span>':''}
+          ${u.id===CU.id?'<span class="bx bx-go">You</span>':''}
+        </div>
+        <div style="font-size:12px;color:var(--t3)">${u.email}</div>
+      </div>
+      <span class="bx ${u.role==='admin'?'bx-warn':'bx-gr'}">${u.role}</span>
+      ${u.id!==CU.id?`
+      <div style="display:flex;gap:6px">
+        <button class="btn ${u.active===false?'btn-ok':'btn-d'} btn-sm" onclick="adminToggleActive(${u.id},${u.active===false})">${u.active===false?'Enable':'Disable'}</button>
+        <button class="btn btn-s btn-sm" onclick="adminChangeRole(${u.id},'${u.role==='admin'?'member':'admin'}','${u.name.replace(/'/g,"\\'")}')">Make ${u.role==='admin'?'Member':'Admin'}</button>
+        <button class="btn btn-d btn-sm" onclick="adminDeleteUser(${u.id},'${u.name.replace(/'/g,"\\'")}')">Delete</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+function renderAdminActivity(activity){
+  const el = document.getElementById('admin-activity-list');
+  if (!activity.length) { el.innerHTML = '<div class="empty-state">No activity yet</div>'; return; }
+  el.innerHTML = activity.slice(0,15).map(a=>`
+    <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--b)">
+      <div class="av av32" style="width:26px;height:26px;font-size:10px;background:${ucol(a.user_name)}22;color:${ucol(a.user_name)}">${ini(a.user_name||'?')}</div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;color:var(--t2)"><strong style="color:var(--t);font-weight:500">${a.user_name}</strong> ${a.action}${a.target?' <span style="color:var(--ink2)">'+a.target+'</span>':''}</div>
+        <div style="font-size:10.5px;color:var(--t3)">${ago(a.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function adminToggleActive(id, shouldEnable){
+  const action = shouldEnable ? 'enable' : 'disable';
+  if (!confirm(shouldEnable ? 'Re-enable this user? They will be able to sign in again.' : 'Disable this user? They will no longer be able to sign in.')) return;
+  try {
+    await api('PUT', `/admin/users/${id}/${action}`);
+    renderAdmin();
+    toast(`User ${action}d`);
+  } catch(e) { toast(e.message,'err'); }
+}
+
+async function adminChangeRole(id, newRole, name){
+  if (!confirm(`Set ${name} as ${newRole}?`)) return;
+  try {
+    await api('PUT', `/admin/users/${id}/role`, { role: newRole });
+    renderAdmin();
+    toast('Role updated');
+  } catch(e) { toast(e.message,'err'); }
+}
+
+async function adminDeleteUser(id, name){
+  if (!confirm(`Permanently delete ${name}? This cannot be undone.`)) return;
+  try {
+    await api('DELETE', `/admin/users/${id}`);
+    renderAdmin();
+    toast('User deleted');
+  } catch(e) { toast(e.message,'err'); }
 }
 
 // ════════════════════════════════════════════════════════════
