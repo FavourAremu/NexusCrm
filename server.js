@@ -562,23 +562,23 @@ app.get('/api/deals', auth, async (req, res) => {
   res.json(r.rows);
 });
 app.post('/api/deals', auth, async (req, res) => {
-  const { name, company, value, stage, probability, contact } = req.body;
+  const { name, company, value, stage, probability, contact, owner } = req.body;
   const r = await pool.query(
     'INSERT INTO deals (name,company,value,stage,probability,contact,owner) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-    [name, company, value || 0, stage || 'Lead', probability || 0, contact, req.user.name]
+    [name, company, value || 0, stage || 'Lead', probability || 0, contact, owner || req.user.name]
   );
   await logActivity(req.user.name, 'added deal', name);
   res.json(r.rows[0]);
 });
 app.put('/api/deals/:id', auth, async (req, res) => {
-  const { name, company, value, stage, probability, contact } = req.body;
+  const { name, company, value, stage, probability, contact, owner } = req.body;
 
   const prev = await pool.query('SELECT stage FROM deals WHERE id=$1', [req.params.id]);
   const before = prev.rows[0] || {};
 
   const r = await pool.query(
-    'UPDATE deals SET name=$1,company=$2,value=$3,stage=$4,probability=$5,contact=$6 WHERE id=$7 RETURNING *',
-    [name, company, value, stage, probability, contact, req.params.id]
+    'UPDATE deals SET name=$1,company=$2,value=$3,stage=$4,probability=$5,contact=$6,owner=COALESCE($7,owner) WHERE id=$8 RETURNING *',
+    [name, company, value, stage, probability, contact, owner||null, req.params.id]
   );
   await logActivity(req.user.name, 'updated deal', name);
 
@@ -688,21 +688,32 @@ app.get('/api/tasks', auth, async (req, res) => {
   res.json(r.rows);
 });
 app.post('/api/tasks', auth, async (req, res) => {
-  const { title, contact, due, priority } = req.body;
+  const { title, contact, due, priority, assigned_to } = req.body;
+  const assignee = assigned_to || req.user.name;
   const r = await pool.query(
     'INSERT INTO tasks (title,contact,due,priority,assigned_to) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-    [title, contact, due, priority || 'medium', req.user.name]
+    [title, contact, due, priority || 'medium', assignee]
   );
   await logActivity(req.user.name, 'added task', title);
+  // Notify assigned person if different from creator
+  if (assignee !== req.user.name) {
+    await notifyUsers(assignee, `Task Assigned to You`, title, { screen: 'tasks' }, req.user.name);
+  }
   res.json(r.rows[0]);
 });
 app.put('/api/tasks/:id', auth, async (req, res) => {
-  const { title, contact, due, priority, done } = req.body;
+  const { title, contact, due, priority, done, assigned_to } = req.body;
+  const prev = await pool.query('SELECT assigned_to FROM tasks WHERE id=$1', [req.params.id]);
+  const before = prev.rows[0] || {};
   const r = await pool.query(
-    'UPDATE tasks SET title=$1,contact=$2,due=$3,priority=$4,done=$5 WHERE id=$6 RETURNING *',
-    [title, contact, due, priority, done, req.params.id]
+    'UPDATE tasks SET title=$1,contact=$2,due=$3,priority=$4,done=$5,assigned_to=COALESCE($6,assigned_to) WHERE id=$7 RETURNING *',
+    [title, contact, due, priority, done, assigned_to||null, req.params.id]
   );
   await logActivity(req.user.name, done ? 'completed task' : 'updated task', title);
+  // Notify newly assigned person
+  if (assigned_to && assigned_to !== before.assigned_to && assigned_to !== req.user.name) {
+    await notifyUsers(assigned_to, `Task Assigned to You`, title, { screen: 'tasks' }, req.user.name);
+  }
   res.json(r.rows[0]);
 });
 app.delete('/api/tasks/:id', auth, async (req, res) => {
