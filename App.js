@@ -700,14 +700,160 @@ function ConversionScreen({ data, onRefresh, refreshing }) {
 }
 function fmtDate(ts) { if(!ts) return '—'; return new Date(ts).toLocaleDateString(); }
 
+// ── ADMIN SCREEN ──────────────────────────────────────────────
+function AdminScreen({ currentUser, onRefresh, refreshing }) {
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('users'); // users | stats
+
+  useEffect(()=>{ loadAdmin(); },[]);
+
+  async function loadAdmin() {
+    setLoading(true);
+    try {
+      const [u, s] = await Promise.all([
+        apiFetch('GET','/admin/users'),
+        apiFetch('GET','/admin/stats'),
+      ]);
+      setUsers(u); setStats(s);
+    } catch(e) { Alert.alert('Error', e.message); }
+    setLoading(false);
+  }
+
+  async function toggleActive(user) {
+    const endpoint = user.active===false ? `/admin/users/${user.id}/enable` : `/admin/users/${user.id}/disable`;
+    const action = user.active===false ? 'enable' : 'disable';
+    Alert.alert(`${action.charAt(0).toUpperCase()+action.slice(1)} user?`, `${action === 'disable' ? 'They will no longer be able to sign in.' : 'They will be able to sign in again.'}`, [
+      {text:'Cancel', style:'cancel'},
+      {text:action.charAt(0).toUpperCase()+action.slice(1), style: action==='disable'?'destructive':'default', onPress: async()=>{
+        try {
+          const updated = await apiFetch('PUT', endpoint);
+          setUsers(us => us.map(u=>u.id===updated.id?updated:u));
+        } catch(e){ Alert.alert('Error',e.message); }
+      }}
+    ]);
+  }
+
+  async function changeRole(user) {
+    const newRole = user.role==='admin' ? 'member' : 'admin';
+    Alert.alert('Change role?', `Set ${user.name} as ${newRole}?`, [
+      {text:'Cancel', style:'cancel'},
+      {text:'Confirm', onPress: async()=>{
+        try {
+          const updated = await apiFetch('PUT',`/admin/users/${user.id}/role`,{role:newRole});
+          setUsers(us => us.map(u=>u.id===updated.id?updated:u));
+        } catch(e){ Alert.alert('Error',e.message); }
+      }}
+    ]);
+  }
+
+  async function deleteUser(user) {
+    Alert.alert('Delete user?', `Permanently delete ${user.name}? This cannot be undone.`, [
+      {text:'Cancel', style:'cancel'},
+      {text:'Delete', style:'destructive', onPress: async()=>{
+        try {
+          await apiFetch('DELETE',`/admin/users/${user.id}`);
+          setUsers(us => us.filter(u=>u.id!==user.id));
+        } catch(e){ Alert.alert('Error',e.message); }
+      }}
+    ]);
+  }
+
+  if (loading) return <Loading />;
+
+  return (
+    <ScrollView style={{flex:1, backgroundColor:T.bg}} contentContainerStyle={{padding:16}}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{loadAdmin();onRefresh&&onRefresh();}} tintColor={T.ink2} />}>
+
+      {/* Admin badge */}
+      <View style={{flexDirection:'row', alignItems:'center', gap:8, marginBottom:16}}>
+        <View style={{backgroundColor:T.warnbg, borderWidth:1, borderColor:T.warnbd, borderRadius:8, paddingHorizontal:10, paddingVertical:5}}>
+          <Text style={{color:T.warn, fontSize:12, fontWeight:'700'}}>⚙ ADMIN PANEL</Text>
+        </View>
+      </View>
+
+      {/* Stats */}
+      {stats && (
+        <View style={{flexDirection:'row', flexWrap:'wrap', gap:9, marginBottom:18}}>
+          {[
+            {label:'Total Users',    val:stats.users,        color:T.ink2},
+            {label:'Contacts',       val:stats.contacts,     color:T.go},
+            {label:'Open Leads',     val:stats.leads,        color:T.sky},
+            {label:'Active Deals',   val:stats.openDeals,    color:T.warn},
+            {label:'Open Tickets',   val:stats.openTickets,  color:T.err},
+          ].map(s=>(
+            <View key={s.label} style={{width:'47%', backgroundColor:T.bg2, borderWidth:1, borderColor:T.border, borderRadius:10, padding:13}}>
+              <Text style={{fontSize:10, color:T.text3, fontWeight:'600', textTransform:'uppercase', letterSpacing:0.5, marginBottom:5}}>{s.label}</Text>
+              <Text style={{fontSize:22, fontWeight:'800', color:s.color, letterSpacing:-0.5}}>{s.val}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* User list */}
+      <Card>
+        <SectionHeader title={`Team Members (${users.length})`} />
+        {users.map(u=>(
+          <View key={u.id} style={{paddingVertical:12, borderBottomWidth:1, borderColor:T.border}}>
+            <View style={{flexDirection:'row', alignItems:'center', gap:10, marginBottom:8}}>
+              <Avatar name={u.name} size={36} />
+              <View style={{flex:1}}>
+                <View style={{flexDirection:'row', alignItems:'center', gap:6}}>
+                  <Text style={{fontSize:14, fontWeight:'600', color: u.active===false ? T.text3 : T.text}}>{u.name}</Text>
+                  {u.active===false && <Badge label="Disabled" color={T.err} />}
+                  {u.id===currentUser.id && <Badge label="You" color={T.go} />}
+                </View>
+                <Text style={{fontSize:12, color:T.text3}}>{u.email}</Text>
+              </View>
+              <Badge label={u.role} color={u.role==='admin'?T.warn:T.text2} />
+            </View>
+            {/* Don't show actions for self */}
+            {u.id !== currentUser.id && (
+              <View style={{flexDirection:'row', gap:7}}>
+                <TouchableOpacity onPress={()=>toggleActive(u)} style={{flex:1, backgroundColor: u.active===false ? T.gobg : T.errbg, borderWidth:1, borderColor: u.active===false ? T.gobd : T.errbd, borderRadius:7, padding:8, alignItems:'center'}}>
+                  <Text style={{color: u.active===false ? T.go : T.err, fontSize:12, fontWeight:'500'}}>{u.active===false ? 'Enable' : 'Disable'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>changeRole(u)} style={{flex:1, backgroundColor:T.warnbg, borderWidth:1, borderColor:T.warnbd, borderRadius:7, padding:8, alignItems:'center'}}>
+                  <Text style={{color:T.warn, fontSize:12, fontWeight:'500'}}>Make {u.role==='admin'?'Member':'Admin'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>deleteUser(u)} style={{backgroundColor:T.errbg, borderWidth:1, borderColor:T.errbd, borderRadius:7, padding:8, paddingHorizontal:12, alignItems:'center'}}>
+                  <Text style={{color:T.err, fontSize:12, fontWeight:'500'}}>Del</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))}
+      </Card>
+
+      {/* Recent activity */}
+      {stats?.recentActivity?.length > 0 && (
+        <Card style={{marginTop:14}}>
+          <SectionHeader title="Recent Activity" />
+          {stats.recentActivity.slice(0,10).map(a=>(
+            <View key={a.id} style={{flexDirection:'row', gap:8, paddingVertical:8, borderBottomWidth:1, borderColor:T.border}}>
+              <Avatar name={a.user_name||'?'} size={24} />
+              <View style={{flex:1}}>
+                <Text style={{fontSize:12.5, color:T.text2}}><Text style={{color:T.text, fontWeight:'500'}}>{a.user_name}</Text> {a.action}{a.target?' '+a.target:''}</Text>
+                <Text style={{fontSize:10.5, color:T.text3}}>{ago(a.created_at)}</Text>
+              </View>
+            </View>
+          ))}
+        </Card>
+      )}
+    </ScrollView>
+  );
+}
+
 // ── MORE MENU ─────────────────────────────────────────────────
-function MoreScreen({ onNavigate, badges={} }) {
+function MoreScreen({ onNavigate, badges={}, currentUser }) {
+  const visibleItems = MORE_ITEMS.filter(item => !item.adminOnly || currentUser?.role === 'admin');
   return (
     <ScrollView style={{ flex:1, backgroundColor:T.bg }} contentContainerStyle={{ padding:16 }}>
-      {MORE_ITEMS.map(item=>(
+      {visibleItems.map(item=>(
         <TouchableOpacity key={item.key} onPress={()=>onNavigate(item.key)} style={{ marginBottom:10 }}>
-          <Card style={{ flexDirection:'row', alignItems:'center', gap:14 }}>
-            <View style={{ width:42, height:42, borderRadius:10, backgroundColor:T.bg4, alignItems:'center', justifyContent:'center' }}>
+          <Card style={{ flexDirection:'row', alignItems:'center', gap:14, borderColor: item.key==='admin' ? T.warnbd : T.border }}>
+            <View style={{ width:42, height:42, borderRadius:10, backgroundColor: item.key==='admin' ? T.warnbg : T.bg4, alignItems:'center', justifyContent:'center' }}>
               <Text style={{ fontSize:20 }}>{item.icon}</Text>
             </View>
             <View style={{ flex:1 }}>
@@ -756,6 +902,7 @@ const MORE_ITEMS = [
   { key:'tickets',  label:'Support Tickets', icon:'🎫', desc:'Inquiries, complaints & bugs' },
   { key:'vendors',  label:'Vendors',         icon:'🏢', desc:'Manage vendor relationships' },
   { key:'notes',    label:'Notes',           icon:'📝', desc:'Call logs, meetings & history' },
+  { key:'admin',    label:'Admin Panel',     icon:'⚙',  desc:'Manage users & workspace', adminOnly:true },
 ];
 
 export default function App() {
@@ -764,7 +911,7 @@ export default function App() {
   const [tab, setTab] = useState('dash');
   const [subTab, setSubTab] = useState(null); // active screen within "More"
   const [devicePushToken, setDevicePushToken] = useState(null);
-  const [data, setData] = useState({ contacts:[], leads:[], deals:[], tickets:[], vendors:[], tasks:[], notes:[], conversions:[], activity:[] });
+  const [data, setData] = useState({ contacts:[], leads:[], deals:[], tickets:[], vendors:[], tasks:[], notes:[], conversions:[], activity:[], team:[] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -834,12 +981,13 @@ export default function App() {
 
   async function loadAll() {
     try {
-      const [contacts,leads,deals,tickets,vendors,tasks,notes,conversions,activity] = await Promise.all([
+      const [contacts,leads,deals,tickets,vendors,tasks,notes,conversions,activity,team] = await Promise.all([
         apiFetch('GET','/contacts'), apiFetch('GET','/leads'), apiFetch('GET','/deals'),
         apiFetch('GET','/tickets'), apiFetch('GET','/vendors'), apiFetch('GET','/tasks'),
         apiFetch('GET','/notes'), apiFetch('GET','/conversions'), apiFetch('GET','/activity'),
+        apiFetch('GET','/team'),
       ]);
-      setData({contacts,leads,deals,tickets,vendors,tasks,notes,conversions,activity});
+      setData({contacts,leads,deals,tickets,vendors,tasks,notes,conversions,activity,team});
     } catch(e) { Alert.alert('Error', e.message); }
   }
 
@@ -1057,6 +1205,7 @@ export default function App() {
   }
 
   const contactNames = data.contacts.map(c=>c.name);
+  const teamMemberNames = (data.team||[]).filter(u=>u.active!==false).map(u=>u.name);
 
   function renderScreen() {
     const props = { data, onRefresh, refreshing };
@@ -1068,14 +1217,15 @@ export default function App() {
       if (!subTab) return <MoreScreen onNavigate={setSubTab} badges={{
         tickets: data.tickets.filter(x=>x.status==='open').length || 0,
         leads:   data.leads.length || 0,
-      }} />;
+      }} currentUser={user} />;
       const subLabel = MORE_ITEMS.find(m=>m.key===subTab)?.label || '';
       let screen;
       if (subTab==='leads')   screen = <LeadsScreen {...props} onCapture={()=>{setForm({source:'website'});setLeadModal({visible:true});}} onDelete={delLead} onConvert={l=>{setConvertModal({visible:true,lead:l});setForm({dealValue:l.value||0});}} />;
       if (subTab==='convert') screen = <ConversionScreen {...props} />;
       if (subTab==='tickets') screen = <TicketsScreen {...props} onAdd={()=>{setForm({type:'inquiry',priority:'medium'});setTicketModal({visible:true,item:null});}} onEdit={t=>{setForm(t);setTicketModal({visible:true,item:t});}} onResolve={resolveTicket} onDelete={delTicket} />;
       if (subTab==='vendors') screen = <VendorsScreen {...props} onAdd={()=>{setForm({status:'active'});setVendorModal({visible:true,item:null});}} onEdit={v=>{setForm(v);setVendorModal({visible:true,item:v});}} onDelete={delVendor} />;
-      if (subTab==='notes')  screen = <NotesScreen {...props} onAdd={()=>{setForm({tag:'note'});setNoteModal({visible:true});}} onDelete={delNote} />;
+      if (subTab==='notes')   screen = <NotesScreen {...props} onAdd={()=>{setForm({tag:'note'});setNoteModal({visible:true});}} onDelete={delNote} />;
+      if (subTab==='admin')   screen = <AdminScreen currentUser={user} onRefresh={onRefresh} refreshing={refreshing} />;
       return (
         <View style={{ flex:1 }}>
           <SubScreenHeader title={subLabel} onBack={()=>setSubTab(null)} />
@@ -1216,6 +1366,7 @@ export default function App() {
         <Input label="Probability (%)" value={String(form.probability||'')} onChangeText={v=>sf('probability',v)} keyboardType="numeric" />
         <Picker label="Stage" value={form.stage||'Lead'} onChange={v=>sf('stage',v)} options={STAGES} />
         <Picker label="Contact" value={form.contact||''} onChange={v=>sf('contact',v)} options={['—',...contactNames]} />
+        <Picker label="Owner" value={form.owner||user?.name||''} onChange={v=>sf('owner',v)} options={teamMemberNames.length?teamMemberNames:[user?.name||'']} />
       </FormModal>
 
       {/* ── TICKET FORM ── */}
@@ -1224,7 +1375,7 @@ export default function App() {
         <Picker label="Type" value={form.type||'inquiry'} onChange={v=>sf('type',v)} options={['inquiry','complaint','bug','other']} />
         <Picker label="Priority" value={form.priority||'medium'} onChange={v=>sf('priority',v)} options={['high','medium','low']} />
         <Picker label="Contact" value={form.contact||'—'} onChange={v=>sf('contact',v)} options={['—',...contactNames]} />
-        <Input label="Assignee" value={form.assignee||''} onChangeText={v=>sf('assignee',v)} />
+        <Picker label="Assignee" value={form.assignee||user.name} onChange={v=>sf('assignee',v)} options={teamMemberNames.length?teamMemberNames:[user.name]} />
         <Input label="Description" value={form.description||''} onChangeText={v=>sf('description',v)} multiline numberOfLines={4} />
       </FormModal>
 
@@ -1245,6 +1396,7 @@ export default function App() {
         <Picker label="Contact" value={form.contact||'—'} onChange={v=>sf('contact',v)} options={['—',...contactNames]} />
         <Input label="Due Date (YYYY-MM-DD)" value={form.due||''} onChangeText={v=>sf('due',v)} placeholder="2026-07-01" />
         <Picker label="Priority" value={form.priority||'medium'} onChange={v=>sf('priority',v)} options={['high','medium','low']} />
+        <Picker label="Assign To" value={form.assigned_to||user?.name||''} onChange={v=>sf('assigned_to',v)} options={teamMemberNames.length?teamMemberNames:[user?.name||'']} />
       </FormModal>
 
       {/* ── NOTE FORM ── */}
