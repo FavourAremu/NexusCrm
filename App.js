@@ -17,7 +17,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
 // ── CONFIG ────────────────────────────────────────────────────
-const API = `${process.env.API_URL}/api`;
+const API = 'https://nexuscrm.name.ng/api';
 // ── THEME ─────────────────────────────────────────────────────
 const T = {
   bg:      '#07080a',
