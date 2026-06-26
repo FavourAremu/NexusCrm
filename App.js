@@ -17,8 +17,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://nexuscrm-server-aolk.onrender.com/api';
-
+const API = `${process.env.API_URL}/api`;
 // ── THEME ─────────────────────────────────────────────────────
 const T = {
   bg:      '#07080a',
