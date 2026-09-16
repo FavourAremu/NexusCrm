@@ -324,7 +324,36 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
 .toast-err{border-left:3px solid var(--err);}
 @keyframes sli{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 
-/* ── LOADING ──────────────────────────────────────────── */
+/* ── GLOBAL SEARCH ───────────────────────────────────── */
+.gsearch-wrap{position:relative;flex-shrink:0;}
+.gsearch-input{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:7px 11px 7px 30px;color:var(--t);font-size:13px;font-family:'Inter',sans-serif;outline:none;width:200px;transition:all .2s;}
+.gsearch-input:focus{border-color:var(--ink);width:280px;}
+.gsearch-dropdown{position:absolute;top:calc(100% + 6px);right:0;width:360px;max-height:420px;overflow-y:auto;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--rl);box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:500;}
+.gsr-section{padding:6px 0;}
+.gsr-section-title{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:6px 14px 4px;}
+.gsr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .1s;}
+.gsr-item:hover{background:var(--bg3);}
+.gsr-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.gsr-main{flex:1;min-width:0;}
+.gsr-name{font-size:13px;font-weight:500;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gsr-sub{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gsr-badge{flex-shrink:0;}
+.gsr-empty{padding:24px;text-align:center;color:var(--t3);font-size:13px;}
+.gsr-footer{padding:10px 14px;border-top:1px solid var(--b);font-size:12px;color:var(--t3);text-align:center;cursor:pointer;}
+.gsr-footer:hover{color:var(--ink2);}
+/* search results page */
+.sr-group{margin-bottom:20px;}
+.sr-group-title{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.sr-group-title::after{content:'';flex:1;height:1px;background:var(--b);}
+mark{background:var(--inkbg);color:var(--ink2);border-radius:2px;padding:0 2px;font-style:normal;}
+@media(max-width:600px){
+  .gsearch-input{width:140px;}
+  .gsearch-input:focus{width:180px;}
+  .gsearch-dropdown{width:calc(100vw - 24px);right:-60px;}
+}
+.export-item{padding:10px 14px;font-size:13px;color:var(--t2);cursor:pointer;transition:background .1s;}
+.export-item:hover{background:var(--bg3);color:var(--t);}
+.dash-preset.active{background:var(--inkbg) !important;color:var(--ink2) !important;border-color:var(--inkbd) !important;}
 .spin{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--ink);border-radius:50%;animation:rot .7s linear infinite;display:inline-block;}
 @keyframes rot{to{transform:rotate(360deg);}}
 .loading{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--t3);gap:10px;font-size:13px;}
@@ -342,7 +371,13 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
       <div class="auth-title">Sign in to your account</div>
       <div class="auth-error" id="si-err"></div>
       <div class="fg"><label class="fl">Work Email</label><input class="fi" id="si-email" type="email" placeholder="you@company.com" autocomplete="email"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" id="si-password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="fg">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <label class="fl" style="margin-bottom:0">Password</label>
+          <a onclick="showScreen('forgot')" style="font-size:11.5px;color:var(--ink2);cursor:pointer">Forgot password?</a>
+        </div>
+        <input class="fi" id="si-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
       <button class="btn btn-p btn-full" id="si-btn" onclick="doSignIn()">Sign In</button>
     </div>
     <div class="auth-footer">Don't have an account? <a onclick="showScreen('signup')">Create one</a></div>
@@ -367,6 +402,40 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
   </div>
 </div>
 
+<!-- ══════════════ FORGOT PASSWORD ══════════════ -->
+<div class="auth-wrap" id="screen-forgot" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-logo">Nexus<span>CRM</span></div>
+    <div class="auth-sub">IT Operations Workspace</div>
+    <div class="auth-card">
+      <div class="auth-title">Reset your password</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:16px">Enter your work email and we'll send you a reset link.</div>
+      <div class="auth-error" id="fp-err"></div>
+      <div class="auth-error" id="fp-ok" style="background:var(--gobg);border-color:var(--gobd);color:var(--go)"></div>
+      <div class="fg"><label class="fl">Work Email</label><input class="fi" id="fp-email" type="email" placeholder="you@company.com"></div>
+      <button class="btn btn-p btn-full" id="fp-btn" onclick="doForgotPassword()">Send Reset Link</button>
+    </div>
+    <div class="auth-footer"><a onclick="showScreen('signin')">← Back to sign in</a></div>
+  </div>
+</div>
+
+<!-- ══════════════ RESET PASSWORD ══════════════ -->
+<div class="auth-wrap" id="screen-reset" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-logo">Nexus<span>CRM</span></div>
+    <div class="auth-sub">IT Operations Workspace</div>
+    <div class="auth-card">
+      <div class="auth-title">Choose a new password</div>
+      <div class="auth-error" id="rp-err"></div>
+      <div class="auth-error" id="rp-ok" style="background:var(--gobg);border-color:var(--gobd);color:var(--go)"></div>
+      <div class="fg"><label class="fl">New Password</label><input class="fi" id="rp-password" type="password" placeholder="••••••••"></div>
+      <div class="fg"><label class="fl">Confirm Password</label><input class="fi" id="rp-confirm" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-p btn-full" id="rp-btn" onclick="doResetPassword()">Set New Password</button>
+    </div>
+    <div class="auth-footer"><a onclick="showScreen('signin')">← Back to sign in</a></div>
+  </div>
+</div>
+
 <!-- ══════════════ APP ══════════════ -->
 <div id="app" style="display:none;height:100vh;flex-direction:column;">
   <div class="topbar">
@@ -384,6 +453,15 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
       <div class="tn" id="tn-admin" onclick="go('admin')" style="display:none">⚙ Admin</div>
     </div>
     <div class="tb-right">
+      <!-- Global Search -->
+      <div class="gsearch-wrap" id="gsearch-wrap">
+        <div style="position:relative">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="gsearch-input" class="gsearch-input" placeholder="Search everything…" oninput="handleGSearch(this.value)" onkeydown="if(event.key==='Enter')doGSearch(this.value);if(event.key==='Escape')clearGSearch()" autocomplete="off">
+        </div>
+        <!-- Instant results dropdown -->
+        <div id="gsearch-dropdown" class="gsearch-dropdown" style="display:none"></div>
+      </div>
       <div class="sync-pill"><div class="sdot" id="sdot"></div><span id="stxt">Ready</span></div>
       <div class="user-chip" id="user-chip" onclick="doSignOut()">
         <div class="udot"></div>
@@ -398,6 +476,42 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
 
       <!-- DASHBOARD -->
       <div id="pg-dash" class="page active">
+        <!-- Date Range Filter -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:15px;font-weight:600;color:var(--t);font-family:'Syne',sans-serif">Dashboard</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <!-- Quick presets -->
+            <div style="display:flex;gap:4px" id="dash-presets">
+              <button class="btn btn-g btn-sm dash-preset active" data-preset="all" onclick="setDashPreset('all',this)">All time</button>
+              <button class="btn btn-g btn-sm dash-preset" data-preset="7" onclick="setDashPreset('7',this)">7d</button>
+              <button class="btn btn-g btn-sm dash-preset" data-preset="30" onclick="setDashPreset('30',this)">30d</button>
+              <button class="btn btn-g btn-sm dash-preset" data-preset="90" onclick="setDashPreset('90',this)">90d</button>
+              <button class="btn btn-g btn-sm dash-preset" data-preset="custom" onclick="setDashPreset('custom',this)">Custom</button>
+            </div>
+            <!-- Custom date inputs (hidden by default) -->
+            <div id="dash-custom-range" style="display:none;align-items:center;gap:6px">
+              <input type="date" id="dash-from" class="fi" style="width:130px;padding:5px 9px;font-size:12px" onchange="renderDash()">
+              <span style="color:var(--t3);font-size:12px">to</span>
+              <input type="date" id="dash-to" class="fi" style="width:130px;padding:5px 9px;font-size:12px" onchange="renderDash()">
+            </div>
+            <!-- Export button -->
+            <div style="position:relative">
+              <button class="btn btn-g btn-sm" onclick="toggleExportMenu()" id="export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export ▾
+              </button>
+              <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r);min-width:160px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+                <div onclick="exportCSV('contacts')"  class="export-item">👤 Contacts CSV</div>
+                <div onclick="exportCSV('leads')"     class="export-item">◎ Leads CSV</div>
+                <div onclick="exportCSV('deals')"     class="export-item">◈ Deals CSV</div>
+                <div onclick="exportCSV('tickets')"   class="export-item">🎫 Tickets CSV</div>
+                <div onclick="exportCSV('vendors')"   class="export-item">🏢 Vendors CSV</div>
+                <div onclick="exportCSV('tasks')"     class="export-item">✓ Tasks CSV</div>
+                <div onclick="exportCSV('all')"       class="export-item" style="border-top:1px solid var(--b);color:var(--ink2)">📦 Full Export JSON</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="sgrid" id="d-stats"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
           <div class="card"><div class="sh"><div class="st">Pipeline by Stage</div></div><div class="chw" id="d-chart"></div><div class="chl" id="d-labels"></div></div>
@@ -527,6 +641,15 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
         <div class="tw"><div id="notes-list"></div></div>
       </div>
 
+      <!-- GLOBAL SEARCH RESULTS -->
+      <div id="pg-search" class="page">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <div style="font-size:15px;font-weight:600;color:var(--t)" id="search-heading">Search Results</div>
+          <button class="btn btn-g btn-sm" onclick="clearGSearch()">Clear</button>
+        </div>
+        <div id="search-results"></div>
+      </div>
+
       <!-- ADMIN -->
       <div id="pg-admin" class="page">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
@@ -553,18 +676,44 @@ tbody td{padding:10px 13px;font-size:13px;color:var(--t);}
   </div>
 </div>
 
-<!-- MOBILE ACTIVITY DRAWER -->
-<div id="mob-act-overlay" onclick="closeMobAct()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;backdrop-filter:blur(3px)"></div>
-<div id="mob-act-drawer" style="display:none;position:fixed;bottom:0;left:0;right:0;height:70vh;background:var(--bg2);border-radius:16px 16px 0 0;border:1px solid var(--b2);z-index:301;flex-direction:column;">
-  <div style="padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between">
-    <span style="font-size:13px;font-weight:600;color:var(--t2)">Activity Feed</span>
-    <button onclick="closeMobAct()" style="background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer;padding:0 4px">×</button>
+<!-- MOBILE NAV OVERLAY -->
+<div id="mob-overlay" onclick="closeMobNav()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;backdrop-filter:blur(3px)"></div>
+
+<!-- MOBILE NAV DRAWER -->
+<div id="mob-drawer" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:18px 18px 0 0;border:1px solid var(--b2);z-index:301;flex-direction:column;max-height:88vh;overflow-y:auto;">
+
+  <!-- Drawer handle -->
+  <div style="display:flex;justify-content:center;padding:10px 0 4px">
+    <div style="width:36px;height:4px;border-radius:2px;background:var(--b3)"></div>
   </div>
-  <div id="mob-act-feed" style="flex:1;overflow-y:auto;padding:8px"></div>
+
+  <!-- User chip -->
+  <div id="mob-user-chip" style="display:flex;align-items:center;gap:10px;padding:10px 18px 12px;border-bottom:1px solid var(--b)">
+    <div id="mob-av" style="width:34px;height:34px;border-radius:50%;background:var(--inkbg);color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700"></div>
+    <div>
+      <div id="mob-name" style="font-size:13.5px;font-weight:600;color:var(--t)"></div>
+      <div id="mob-role" style="font-size:11px;color:var(--t3)"></div>
+    </div>
+  </div>
+
+  <!-- Main nav items -->
+  <div style="padding:8px 12px">
+    <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;padding:8px 6px 4px">Navigation</div>
+    <div id="mob-nav-items"></div>
+
+    <!-- Activity Feed sub-section -->
+    <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;padding:12px 6px 4px;border-top:1px solid var(--b);margin-top:8px">Activity Feed</div>
+    <div id="mob-act-feed" style="max-height:220px;overflow-y:auto;padding:4px 0"></div>
+  </div>
+
+  <!-- Sign out -->
+  <div style="padding:8px 12px 24px;border-top:1px solid var(--b);margin-top:4px">
+    <button onclick="doSignOut()" style="width:100%;background:var(--errbg);border:1px solid var(--errbd);border-radius:var(--r);color:var(--err);padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Sign Out</button>
+  </div>
 </div>
 
-<!-- MOBILE FAB — activity button -->
-<button id="mob-act-btn" onclick="openMobAct()" style="display:none;position:fixed;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--ink);border:none;color:#fff;font-size:20px;cursor:pointer;z-index:299;box-shadow:0 4px 12px rgba(92,107,192,.4);align-items:center;justify-content:center;">⚡</button>
+<!-- MOBILE FAB -->
+<button id="mob-fab" onclick="toggleMobNav()" style="display:none;position:fixed;bottom:22px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--ink);border:none;color:#fff;font-size:22px;cursor:pointer;z-index:299;box-shadow:0 4px 16px rgba(92,107,192,.5);align-items:center;justify-content:center;transition:transform 0.2s;">☰</button>
 
 <!-- MODAL -->
 <div id="modal" class="mo" style="display:none" onclick="if(event.target===this)closeMo()">
@@ -617,8 +766,10 @@ function setSyn(v){ document.getElementById('sdot').classList.toggle('busy',v); 
 // AUTH
 // ════════════════════════════════════════════════════════════
 function showScreen(name) {
-  document.getElementById('screen-signin').style.display = name==='signin' ? 'flex' : 'none';
-  document.getElementById('screen-signup').style.display = name==='signup' ? 'flex' : 'none';
+  ['signin','signup','forgot','reset'].forEach(s => {
+    const el = document.getElementById('screen-'+s);
+    if(el) el.style.display = s===name ? 'flex' : 'none';
+  });
 }
 
 async function doSignIn() {
@@ -763,20 +914,76 @@ function renderActivity() {
 // ════════════════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════════════════
+// ── DASHBOARD DATE FILTER STATE ───────────────────────
+let dashPreset = 'all'; // 'all' | '7' | '30' | '90' | 'custom'
+
+function getDashDateRange() {
+  const now = new Date();
+  if (dashPreset === 'all') return { from: null, to: null };
+  if (dashPreset === 'custom') {
+    const from = document.getElementById('dash-from')?.value;
+    const to   = document.getElementById('dash-to')?.value;
+    return { from: from ? new Date(from) : null, to: to ? new Date(to+'T23:59:59') : null };
+  }
+  const days = Number(dashPreset);
+  const from = new Date(now); from.setDate(from.getDate() - days);
+  return { from, to: now };
+}
+
+function inRange(dateStr, range) {
+  if (!range.from && !range.to) return true;
+  const d = new Date(dateStr);
+  if (range.from && d < range.from) return false;
+  if (range.to   && d > range.to)   return false;
+  return true;
+}
+
+function setDashPreset(preset, btn) {
+  dashPreset = preset;
+  document.querySelectorAll('.dash-preset').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const custom = document.getElementById('dash-custom-range');
+  if(custom) custom.style.display = preset==='custom' ? 'flex' : 'none';
+  renderDash();
+}
+
+function toggleExportMenu() {
+  const m = document.getElementById('export-menu');
+  m.style.display = m.style.display==='block' ? 'none' : 'block';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#export-btn') && !e.target.closest('#export-menu')) {
+    const m = document.getElementById('export-menu');
+    if(m) m.style.display='none';
+  }
+});
+
 function renderDash() {
-  const openT = DATA.tickets.filter(t=>t.status!=='resolved').length;
-  const openD = DATA.deals.filter(d=>d.stage!=='Closed Won'&&d.stage!=='Closed Lost').length;
-  const pipeV = DATA.deals.filter(d=>d.stage!=='Closed Lost').reduce((a,b)=>a+Number(b.value),0);
+  const range = getDashDateRange();
+
+  // Filter data by date range where applicable
+  const contacts   = range.from ? DATA.contacts.filter(c=>inRange(c.created_at,range)) : DATA.contacts;
+  const leads      = range.from ? DATA.leads.filter(l=>inRange(l.created_at,range)) : DATA.leads;
+  const deals      = range.from ? DATA.deals.filter(d=>inRange(d.created_at,range)) : DATA.deals;
+  const tickets    = range.from ? DATA.tickets.filter(t=>inRange(t.created_at,range)) : DATA.tickets;
+  const conversions= range.from ? DATA.conversions.filter(c=>inRange(c.created_at,range)) : DATA.conversions;
+
+  const openT = tickets.filter(t=>t.status!=='resolved').length;
+  const openD = deals.filter(d=>d.stage!=='Closed Won'&&d.stage!=='Closed Lost').length;
+  const pipeV = deals.filter(d=>d.stage!=='Closed Lost').reduce((a,b)=>a+Number(b.value),0);
+
+  const rangeLabel = dashPreset==='all' ? 'All time' : dashPreset==='custom' ? 'Custom range' : `Last ${dashPreset} days`;
+
   document.getElementById('d-stats').innerHTML = `
-    <div class="sc sc-ink"><div class="sc-l">Contacts</div><div class="sc-v">${DATA.contacts.length}</div><div class="sc-s">In database</div></div>
-    <div class="sc sc-sky"><div class="sc-l">Open Leads</div><div class="sc-v">${DATA.leads.length}</div><div class="sc-s">Awaiting conversion</div></div>
+    <div class="sc sc-ink"><div class="sc-l">Contacts</div><div class="sc-v">${contacts.length}</div><div class="sc-s">${rangeLabel}</div></div>
+    <div class="sc sc-sky"><div class="sc-l">Open Leads</div><div class="sc-v">${leads.length}</div><div class="sc-s">Awaiting conversion</div></div>
     <div class="sc sc-go"><div class="sc-l">Pipeline</div><div class="sc-v">$${(pipeV/1000).toFixed(0)}k</div><div class="sc-s">${openD} active deals</div></div>
     <div class="sc sc-warn"><div class="sc-l">Open Tickets</div><div class="sc-v">${openT}</div><div class="sc-s">Needs attention</div></div>
     <div class="sc sc-err"><div class="sc-l">Vendors</div><div class="sc-v">${DATA.vendors.length}</div><div class="sc-s">${DATA.vendors.filter(v=>v.status==='active').length} active</div></div>
-    <div class="sc"><div class="sc-l">Conversions</div><div class="sc-v">${DATA.conversions.length}</div><div class="sc-s">Leads converted</div></div>`;
+    <div class="sc"><div class="sc-l">Conversions</div><div class="sc-v">${conversions.length}</div><div class="sc-s">${rangeLabel}</div></div>`;
 
   const sm = {}; STAGES.slice(0,5).forEach(s=>sm[s]=0);
-  DATA.deals.forEach(d=>{if(sm[d.stage]!==undefined)sm[d.stage]++;});
+  deals.forEach(d=>{if(sm[d.stage]!==undefined)sm[d.stage]++;});
   const mx = Math.max(...Object.values(sm),1);
   document.getElementById('d-chart').innerHTML = Object.entries(sm).map(([s,c])=>`<div class="chb" style="height:${Math.max((c/mx)*80,3)}px;background:${SC[s]}"></div>`).join('');
   document.getElementById('d-labels').innerHTML = Object.keys(sm).map(s=>`<div class="chlb">${s.substring(0,4)}</div>`).join('');
@@ -789,7 +996,7 @@ function renderDash() {
       </div>`).join('')
     : '<div class="empty-state">No team members</div>';
 
-  document.getElementById('d-tickets').innerHTML = DATA.tickets.filter(t=>t.status!=='resolved').slice(0,3)
+  document.getElementById('d-tickets').innerHTML = tickets.filter(t=>t.status!=='resolved').slice(0,3)
     .map(t=>`<div style="padding:7px 0;border-bottom:1px solid var(--b);display:flex;gap:8px;align-items:center"><span class="${tkTypeCls(t.type)}">${t.type}</span><span style="font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</span>${tkStCls(t.status)}</div>`).join('')
     || '<div class="empty-state" style="padding:12px">No open tickets</div>';
 
@@ -799,8 +1006,111 @@ function renderDash() {
 }
 
 // ════════════════════════════════════════════════════════════
-// LEADS
+// CSV / JSON EXPORT
 // ════════════════════════════════════════════════════════════
+function toCSV(rows, keys) {
+  if (!rows.length) return keys.join(',') + '\n';
+  const header = keys.join(',');
+  const lines = rows.map(r => keys.map(k => {
+    const val = r[k] ?? '';
+    const str = String(val).replace(/"/g,'""');
+    return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
+  }).join(','));
+  return [header, ...lines].join('\n');
+}
+
+function downloadFile(content, filename, type='text/csv') {
+  const blob = new Blob([content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportCSV(type) {
+  document.getElementById('export-menu').style.display = 'none';
+  const ts = new Date().toISOString().split('T')[0];
+
+  if (type === 'all') {
+    // Full JSON export
+    const payload = { contacts:DATA.contacts, leads:DATA.leads, deals:DATA.deals, tickets:DATA.tickets, vendors:DATA.vendors, tasks:DATA.tasks, notes:DATA.notes, conversions:DATA.conversions, exportedAt: new Date().toISOString() };
+    downloadFile(JSON.stringify(payload, null, 2), `nexuscrm-export-${ts}.json`, 'application/json');
+    toast('Full JSON exported');
+    return;
+  }
+
+  const configs = {
+    contacts: { data: DATA.contacts, keys: ['id','name','company','email','phone','status','added_by','created_at'] },
+    leads:    { data: DATA.leads,    keys: ['id','name','company','email','phone','source','value','score','notes','captured_by','created_at'] },
+    deals:    { data: DATA.deals,    keys: ['id','name','company','value','stage','probability','contact','owner','created_at'] },
+    tickets:  { data: DATA.tickets,  keys: ['id','title','contact','type','priority','status','description','assignee','created_by','created_at'] },
+    vendors:  { data: DATA.vendors,  keys: ['id','name','category','contact','phone','status','contract','notes','added_by','created_at'] },
+    tasks:    { data: DATA.tasks,    keys: ['id','title','contact','due','priority','done','assigned_to','created_at'] },
+    notes:    { data: DATA.notes,    keys: ['id','content','contact','date','tag','added_by','created_at'] },
+  };
+
+  const cfg = configs[type];
+  if (!cfg) return;
+  downloadFile(toCSV(cfg.data, cfg.keys), `nexuscrm-${type}-${ts}.csv`);
+  toast(`${type.charAt(0).toUpperCase()+type.slice(1)} exported as CSV`);
+}
+
+// ════════════════════════════════════════════════════════════
+// PASSWORD RESET
+// ════════════════════════════════════════════════════════════
+async function doForgotPassword() {
+  const email = document.getElementById('fp-email').value.trim();
+  const errEl = document.getElementById('fp-err');
+  const okEl  = document.getElementById('fp-ok');
+  const btn   = document.getElementById('fp-btn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!email) { errEl.textContent='Please enter your email'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await api('POST', '/auth/forgot-password', { email });
+    okEl.textContent = '✓ Reset link sent! Check your email inbox.';
+    okEl.style.display = 'block';
+    document.getElementById('fp-email').value = '';
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Send Reset Link';
+}
+
+async function doResetPassword() {
+  const password = document.getElementById('rp-password').value;
+  const confirm  = document.getElementById('rp-confirm').value;
+  const errEl    = document.getElementById('rp-err');
+  const okEl     = document.getElementById('rp-ok');
+  const btn      = document.getElementById('rp-btn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!password)           { errEl.textContent='Enter a new password'; errEl.style.display='block'; return; }
+  if (password.length < 6) { errEl.textContent='Password must be at least 6 characters'; errEl.style.display='block'; return; }
+  if (password !== confirm) { errEl.textContent='Passwords do not match'; errEl.style.display='block'; return; }
+  const token = new URLSearchParams(window.location.search).get('reset_token');
+  if (!token) { errEl.textContent='Invalid or expired reset link. Please request a new one.'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await api('POST', '/auth/reset-password', { token, password });
+    okEl.textContent = '✓ Password updated! You can now sign in.';
+    okEl.style.display = 'block';
+    setTimeout(()=>showScreen('signin'), 2500);
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Set New Password';
+}
+
+// Check for reset token in URL on load
+(function checkResetToken(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('reset_token')) showScreen('reset');
+})();
+
+
 async function captureLead() {
   const name = document.getElementById('lf-name').value.trim();
   if (!name) return toast('Name is required','err');
@@ -1362,48 +1672,290 @@ function toast(msg, type='ok') {
   document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape') { closeMo(); closeMobAct(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeMo(); closeMobNav(); } });
 
-// ── MOBILE ACTIVITY DRAWER ────────────────────────────
+// ── MOBILE NAV DRAWER ─────────────────────────────────
+const MOB_NAV = [
+  { key:'dash',     label:'Dashboard',       icon:'⊞' },
+  { key:'leads',    label:'Lead Capture',    icon:'◎' },
+  { key:'contacts', label:'Contacts',        icon:'👤' },
+  { key:'convert',  label:'Conversion',      icon:'⇄' },
+  { key:'deals',    label:'Pipeline',        icon:'◈' },
+  { key:'tickets',  label:'Support Tickets', icon:'🎫' },
+  { key:'vendors',  label:'Vendors',         icon:'🏢' },
+  { key:'tasks',    label:'Tasks',           icon:'✓' },
+  { key:'notes',    label:'Notes',           icon:'📝' },
+  { key:'admin',    label:'Admin Panel',     icon:'⚙', adminOnly:true },
+];
+
 function isMobile(){ return window.innerWidth <= 600; }
 
-function openMobAct(){
-  const drawer = document.getElementById('mob-act-drawer');
-  const overlay = document.getElementById('mob-act-overlay');
-  // Sync feed content from main feed
-  document.getElementById('mob-act-feed').innerHTML = document.getElementById('act-feed').innerHTML;
-  drawer.style.display = 'flex';
-  overlay.style.display = 'block';
-  // Animate in
-  drawer.style.transform = 'translateY(100%)';
-  requestAnimationFrame(()=>{ drawer.style.transition='transform 0.25s ease'; drawer.style.transform='translateY(0)'; });
-}
-
-function closeMobAct(){
-  const drawer = document.getElementById('mob-act-drawer');
-  const overlay = document.getElementById('mob-act-overlay');
-  drawer.style.transform = 'translateY(100%)';
-  setTimeout(()=>{ drawer.style.display='none'; overlay.style.display='none'; drawer.style.transition=''; }, 250);
-}
-
 function updateMobileUI(){
-  const fab = document.getElementById('mob-act-btn');
+  const fab = document.getElementById('mob-fab');
   if(fab) fab.style.display = isMobile() ? 'flex' : 'none';
 }
 
-window.addEventListener('resize', updateMobileUI);
-updateMobileUI(); // run on load
+function buildMobNav(){
+  if(!CU) return;
+  // Set user info
+  const av = document.getElementById('mob-av');
+  const nm = document.getElementById('mob-name');
+  const rl = document.getElementById('mob-role');
+  if(av) av.textContent = ini(CU.name);
+  if(nm) nm.textContent = CU.name;
+  if(rl) rl.textContent = CU.role === 'admin' ? '⚙ Admin' : 'Member';
 
-// Also update mob feed whenever activity renders
-const _origRenderAct = renderActivity;
+  // Build nav items
+  const container = document.getElementById('mob-nav-items');
+  if(!container) return;
+  const items = MOB_NAV.filter(i => !i.adminOnly || CU.role === 'admin');
+  container.innerHTML = items.map(item => {
+    const isActive = curPage === item.key;
+    // Badge counts
+    let badge = 0;
+    if(item.key==='tasks')   badge = (DATA.tasks||[]).filter(t=>!t.done).length;
+    if(item.key==='tickets') badge = (DATA.tickets||[]).filter(t=>t.status==='open').length;
+    return `<div onclick="mobGoTo('${item.key}')" style="display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:var(--r);margin-bottom:2px;cursor:pointer;background:${isActive?'var(--inkbg)':'transparent'};border:${isActive?'1px solid var(--inkbd)':'1px solid transparent'}">
+      <span style="font-size:17px;width:24px;text-align:center">${item.icon}</span>
+      <span style="font-size:14px;font-weight:${isActive?'500':'400'};color:${isActive?'var(--ink2)':'var(--t2)'};flex:1">${item.label}</span>
+      ${badge>0?`<span style="background:var(--err);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:2px 7px;min-width:20px;text-align:center">${badge}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openMobNav(){
+  buildMobNav();
+  // Sync activity feed
+  const mobFeed = document.getElementById('mob-act-feed');
+  if(mobFeed) mobFeed.innerHTML = document.getElementById('act-feed').innerHTML;
+
+  const drawer = document.getElementById('mob-drawer');
+  const overlay = document.getElementById('mob-overlay');
+  const fab = document.getElementById('mob-fab');
+  drawer.style.display = 'flex';
+  overlay.style.display = 'block';
+  if(fab){ fab.textContent='×'; fab.style.transform='rotate(90deg)'; }
+  // Animate in
+  drawer.style.transform = 'translateY(100%)';
+  requestAnimationFrame(()=>{
+    drawer.style.transition = 'transform 0.25s ease';
+    drawer.style.transform = 'translateY(0)';
+  });
+}
+
+function closeMobNav(){
+  const drawer = document.getElementById('mob-drawer');
+  const overlay = document.getElementById('mob-overlay');
+  const fab = document.getElementById('mob-fab');
+  drawer.style.transform = 'translateY(100%)';
+  if(fab){ fab.textContent='☰'; fab.style.transform=''; }
+  setTimeout(()=>{
+    drawer.style.display = 'none';
+    overlay.style.display = 'none';
+    drawer.style.transition = '';
+  }, 250);
+}
+
+function toggleMobNav(){
+  const drawer = document.getElementById('mob-drawer');
+  if(drawer.style.display === 'flex') closeMobNav();
+  else openMobNav();
+}
+
+function mobGoTo(page){
+  closeMobNav();
+  setTimeout(()=>go(page), 260);
+}
+
+window.addEventListener('resize', updateMobileUI);
+updateMobileUI();
+
+// Keep mob feed in sync when activity renders
+const _origRenderActivity = renderActivity;
 window.renderActivity = function(){
-  _origRenderAct();
-  // Sync to mobile drawer if open
+  _origRenderActivity();
   const mob = document.getElementById('mob-act-feed');
-  if(mob && document.getElementById('mob-act-drawer').style.display==='flex'){
+  const drawer = document.getElementById('mob-drawer');
+  if(mob && drawer && drawer.style.display==='flex'){
     mob.innerHTML = document.getElementById('act-feed').innerHTML;
   }
 };
+
+// ════════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ════════════════════════════════════════════════════════
+let gSearchTimer = null;
+
+// Highlight matching text
+function highlight(text, q) {
+  if (!q || !text) return text||'';
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return String(text).replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+}
+
+// Search all local data
+function searchAll(q) {
+  q = (q||'').toLowerCase().trim();
+  if (!q) return null;
+
+  const results = {
+    contacts: [],
+    leads:    [],
+    deals:    [],
+    tickets:  [],
+    vendors:  [],
+    tasks:    [],
+    notes:    [],
+  };
+
+  (DATA.contacts||[]).forEach(c => {
+    if([c.name,c.company,c.email,c.phone,c.status].some(f=>(f||'').toLowerCase().includes(q)))
+      results.contacts.push(c);
+  });
+  (DATA.leads||[]).forEach(l => {
+    if([l.name,l.company,l.email,l.source,l.notes].some(f=>(f||'').toLowerCase().includes(q)))
+      results.leads.push(l);
+  });
+  (DATA.deals||[]).forEach(d => {
+    if([d.name,d.company,d.stage,d.contact,d.owner].some(f=>(f||'').toLowerCase().includes(q)))
+      results.deals.push(d);
+  });
+  (DATA.tickets||[]).forEach(t => {
+    if([t.title,t.contact,t.type,t.description,t.assignee].some(f=>(f||'').toLowerCase().includes(q)))
+      results.tickets.push(t);
+  });
+  (DATA.vendors||[]).forEach(v => {
+    if([v.name,v.category,v.contact,v.notes,v.status].some(f=>(f||'').toLowerCase().includes(q)))
+      results.vendors.push(v);
+  });
+  (DATA.tasks||[]).forEach(t => {
+    if([t.title,t.contact,t.assigned_to,t.priority].some(f=>(f||'').toLowerCase().includes(q)))
+      results.tasks.push(t);
+  });
+  (DATA.notes||[]).forEach(n => {
+    if([n.content,n.contact,n.tag].some(f=>(f||'').toLowerCase().includes(q)))
+      results.notes.push(n);
+  });
+
+  return results;
+}
+
+function totalResults(r) {
+  return Object.values(r).reduce((a,b)=>a+b.length, 0);
+}
+
+// Live dropdown (top 3 per section)
+function handleGSearch(q) {
+  clearTimeout(gSearchTimer);
+  const dd = document.getElementById('gsearch-dropdown');
+  if (!q.trim()) { dd.style.display='none'; return; }
+  gSearchTimer = setTimeout(()=>{
+    const r = searchAll(q);
+    if (!r) { dd.style.display='none'; return; }
+    const total = totalResults(r);
+    if (total === 0) {
+      dd.innerHTML = `<div class="gsr-empty">No results for "<strong>${q}</strong>"</div>`;
+      dd.style.display = 'block';
+      return;
+    }
+    const sections = [
+      { key:'contacts', label:'Contacts',   icon:'👤', color:'var(--ink2)',  render: c=>`<div class="gsr-name">${highlight(c.name,q)}</div><div class="gsr-sub">${c.company||''} · ${c.email||''}</div>`, page:'contacts' },
+      { key:'leads',    label:'Leads',      icon:'◎',  color:'var(--sky)',   render: l=>`<div class="gsr-name">${highlight(l.name,q)}</div><div class="gsr-sub">${l.company||''} · ${l.source||''}</div>`, page:'leads' },
+      { key:'deals',    label:'Deals',      icon:'◈',  color:'var(--go)',    render: d=>`<div class="gsr-name">${highlight(d.name,q)}</div><div class="gsr-sub">${d.company||''} · ${d.stage||''}</div>`, page:'deals' },
+      { key:'tickets',  label:'Tickets',    icon:'🎫', color:'var(--warn)',  render: t=>`<div class="gsr-name">${highlight(t.title,q)}</div><div class="gsr-sub">${t.type||''} · ${t.status||''}</div>`, page:'tickets' },
+      { key:'vendors',  label:'Vendors',    icon:'🏢', color:'var(--err)',   render: v=>`<div class="gsr-name">${highlight(v.name,q)}</div><div class="gsr-sub">${v.category||''} · ${v.status||''}</div>`, page:'vendors' },
+      { key:'tasks',    label:'Tasks',      icon:'✓',  color:'var(--sky)',   render: t=>`<div class="gsr-name">${highlight(t.title,q)}</div><div class="gsr-sub">${t.contact||''} · ${t.priority||''}</div>`, page:'tasks' },
+      { key:'notes',    label:'Notes',      icon:'📝', color:'var(--t2)',    render: n=>`<div class="gsr-name">${highlight((n.content||'').substring(0,60),q)}…</div><div class="gsr-sub">${n.contact||''} · ${n.tag||''}</div>`, page:'notes' },
+    ];
+
+    let html = '';
+    sections.forEach(s => {
+      const items = r[s.key].slice(0,3);
+      if (!items.length) return;
+      html += `<div class="gsr-section">
+        <div class="gsr-section-title">${s.label} (${r[s.key].length})</div>
+        ${items.map(item=>`
+          <div class="gsr-item" onclick="closeGSearch();go('${s.page}')">
+            <div class="gsr-icon" style="background:${s.color}22;color:${s.color}">${s.icon}</div>
+            <div class="gsr-main">${s.render(item)}</div>
+          </div>`).join('')}
+      </div>`;
+    });
+
+    if (total > 12) {
+      html += `<div class="gsr-footer" onclick="doGSearch('${q.replace(/'/g,"\\'")}')">View all ${total} results →</div>`;
+    }
+
+    dd.innerHTML = html;
+    dd.style.display = 'block';
+  }, 180);
+}
+
+// Full results page
+function doGSearch(q) {
+  if (!q || !q.trim()) return;
+  closeGSearch();
+  const r = searchAll(q);
+  const total = totalResults(r);
+
+  document.getElementById('search-heading').textContent = `${total} result${total!==1?'s':''} for "${q}"`;
+
+  const sections = [
+    { key:'contacts', label:'Contacts',   icon:'👤', color:'var(--ink2)',
+      render: c=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--b)">
+        <div style="width:32px;height:32px;border-radius:50%;background:${ucol(c.name)}22;color:${ucol(c.name)};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${ini(c.name)}</div>
+        <div style="flex:1"><div style="font-size:13.5px;font-weight:500;color:var(--t)">${highlight(c.name,q)}</div><div style="font-size:12px;color:var(--t3)">${highlight(c.company||'',q)} · ${c.email||''}</div></div>
+        ${stBadge(c.status)}
+      </div>`, page:'contacts'},
+    { key:'leads',    label:'Leads',      icon:'◎',  color:'var(--sky)',
+      render: l=>`<div style="padding:10px 0;border-bottom:1px solid var(--b)"><div style="font-size:13.5px;font-weight:500;color:var(--t)">${highlight(l.name,q)}</div><div style="font-size:12px;color:var(--t3);margin-top:2px">${highlight(l.company||'',q)} · ${l.source||''} · <span style="color:var(--go)">$${Number(l.value||0).toLocaleString()}</span></div></div>`, page:'leads'},
+    { key:'deals',    label:'Pipeline',   icon:'◈',  color:'var(--go)',
+      render: d=>`<div style="padding:10px 0;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="font-size:13.5px;font-weight:500;color:var(--t)">${highlight(d.name,q)}</div><div style="font-size:12px;color:var(--t3);margin-top:2px">${highlight(d.company||'',q)} · ${d.stage||''}</div></div><span style="color:var(--go);font-family:var(--mono);font-size:13px;font-weight:600">$${Number(d.value||0).toLocaleString()}</span></div>`, page:'deals'},
+    { key:'tickets',  label:'Support Tickets', icon:'🎫', color:'var(--warn)',
+      render: t=>`<div style="padding:10px 0;border-bottom:1px solid var(--b)"><div style="font-size:13.5px;font-weight:500;color:var(--t)">${highlight(t.title,q)}</div><div style="font-size:12px;color:var(--t3);margin-top:2px">${t.type||''} · ${t.status||''} · ${t.contact||''}</div>${t.description?`<div style="font-size:12px;color:var(--t2);margin-top:4px">${highlight((t.description||'').substring(0,100),q)}…</div>`:''}</div>`, page:'tickets'},
+    { key:'vendors',  label:'Vendors',    icon:'🏢', color:'var(--err)',
+      render: v=>`<div style="padding:10px 0;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="font-size:13.5px;font-weight:500;color:var(--t)">${highlight(v.name,q)}</div><div style="font-size:12px;color:var(--t3);margin-top:2px">${highlight(v.category||'',q)} · ${v.status||''}</div></div></div>`, page:'vendors'},
+    { key:'tasks',    label:'Tasks',      icon:'✓',  color:'var(--sky)',
+      render: t=>`<div style="padding:10px 0;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px"><div style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${t.done?'var(--go)':'var(--b3)'};background:${t.done?'var(--go)':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="color:#000;font-size:9px;font-weight:800">${t.done?'✓':''}</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:500;color:var(--t);${t.done?'text-decoration:line-through;color:var(--t3)':''}">${highlight(t.title,q)}</div><div style="font-size:12px;color:var(--t3);margin-top:2px">${t.contact||''} · ${t.due||''}</div></div>${priB(t.priority)}</div>`, page:'tasks'},
+    { key:'notes',    label:'Notes',      icon:'📝', color:'var(--t2)',
+      render: n=>`<div style="padding:10px 0;border-bottom:1px solid var(--b)"><div style="font-size:13.5px;color:var(--t);line-height:1.55">${highlight((n.content||'').substring(0,120),q)}${n.content&&n.content.length>120?'…':''}</div><div style="font-size:11.5px;color:var(--t3);margin-top:4px">${n.contact||''} · ${n.date||''} · <span class="bx bx-ink">${n.tag||'note'}</span></div></div>`, page:'notes'},
+  ];
+
+  if (total === 0) {
+    document.getElementById('search-results').innerHTML = `<div class="empty-state" style="padding:48px 0"><div style="font-size:36px;margin-bottom:12px">🔍</div><div>No results for "<strong>${q}</strong>"</div><div style="font-size:12px;margin-top:6px;color:var(--t3)">Try a different search term</div></div>`;
+  } else {
+    document.getElementById('search-results').innerHTML = sections.map(s => {
+      if (!r[s.key].length) return '';
+      return `<div class="sr-group">
+        <div class="sr-group-title"><span style="font-size:14px">${s.icon}</span> ${s.label} <span class="bx bx-gr" style="font-size:10px">${r[s.key].length}</span> <span style="cursor:pointer;color:var(--ink2);font-size:10px;text-transform:none;letter-spacing:0;font-weight:400" onclick="go('${s.page}')">View all →</span></div>
+        <div class="tw">${r[s.key].map(item=>s.render(item)).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Navigate to search page
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pg-search').classList.add('active');
+}
+
+function closeGSearch(){
+  document.getElementById('gsearch-dropdown').style.display = 'none';
+}
+
+function clearGSearch(){
+  document.getElementById('gsearch-input').value = '';
+  closeGSearch();
+  go('dash');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#gsearch-wrap')) closeGSearch();
+});
+
+
+
 
 // Allow pressing Enter to submit on auth screens
 document.getElementById('si-password').addEventListener('keydown', e => { if(e.key==='Enter') doSignIn(); });
