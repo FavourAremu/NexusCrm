@@ -15,6 +15,7 @@ const jwt        = require('jsonwebtoken');
 const cors       = require('cors');
 const { Expo }   = require('expo-server-sdk');
 const { Resend } = require('resend');
+const crypto     = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -254,13 +255,21 @@ async function initDB() {
   `);
 
   // ─── Migrations for databases created before v1.1.0 ──────────
-  // "CREATE TABLE IF NOT EXISTS" does nothing if the table already exists,
-  // so columns added in this version must be added explicitly here.
-  // These are all safe to run repeatedly — they no-op if already applied.
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;`);
 
-  // Make sure at least one admin exists. If no admin is set yet (e.g. this
-  // database was created before roles existed), promote the earliest user.
+  // ─── Password reset tokens table ─────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      token      TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used       BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  // Make sure at least one admin exists
   const adminCheck = await pool.query(`SELECT COUNT(*) FROM users WHERE role = 'admin'`);
   if (Number(adminCheck.rows[0].count) === 0) {
     const oldest = await pool.query(`SELECT id, name FROM users ORDER BY created_at ASC LIMIT 1`);
@@ -499,6 +508,89 @@ app.post('/api/auth/signin', async (req, res) => {
 app.get('/api/auth/me', auth, async (req, res) => {
   const result = await pool.query('SELECT id, name, email, role, created_at FROM users WHERE id=$1', [req.user.id]);
   res.json(result.rows[0]);
+});
+
+// POST /api/auth/forgot-password — request a reset link
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  try {
+    const result = await pool.query('SELECT id, name, email FROM users WHERE email=$1 AND active=TRUE', [email.toLowerCase().trim()]);
+    const user = result.rows[0];
+    // Always respond with success even if email not found (prevents user enumeration)
+    if (!user) return res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+
+    // Generate secure token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Invalidate any existing tokens for this user
+    await pool.query('UPDATE password_reset_tokens SET used=TRUE WHERE user_id=$1', [user.id]);
+
+    // Store new token
+    await pool.query(
+      'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1,$2,$3)',
+      [user.id, token, expiresAt]
+    );
+
+    // Send reset email
+    const appUrl = process.env.APP_URL || 'https://nexuscrm-server-aolk.onrender.com';
+    const resetUrl = `${appUrl}?reset_token=${token}`;
+
+    if (resend) {
+      await resend.emails.send({
+        from: process.env.FROM_EMAIL || 'NexusCRM <onboarding@resend.dev>',
+        to: user.email,
+        subject: 'Reset your NexusCRM password',
+        html: emailTemplate(user.name, `
+          <h2 style="margin:0 0 10px;color:#eaebee;font-size:18px">Reset your password</h2>
+          <p style="margin:0 0 16px;color:#858c99;font-size:14px;line-height:1.6">Someone requested a password reset for your NexusCRM account. Click the button below to set a new password. This link expires in <strong style="color:#eaebee">1 hour</strong>.</p>
+          <a href="${resetUrl}" style="display:inline-block;background:#5c6bc0;color:#fff;text-decoration:none;padding:12px 24px;border-radius:7px;font-size:14px;font-weight:600;margin-bottom:16px">Reset Password →</a>
+          <p style="margin:0;color:#454b57;font-size:12px">If you didn't request this, you can safely ignore this email. Your password won't change.</p>
+        `)
+      });
+    } else {
+      console.log(`[DEV] Password reset URL for ${user.email}: ${resetUrl}`);
+    }
+
+    await logActivity(user.name, 'requested password reset', '', 'system');
+    res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+  } catch (err) {
+    console.error('Forgot password error:', err.message);
+    res.status(500).json({ error: 'Failed to send reset email. Please try again.' });
+  }
+});
+
+// POST /api/auth/reset-password — set new password using token
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password are required' });
+  if (password.length < 6)  return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  try {
+    // Look up token
+    const tokenResult = await pool.query(
+      'SELECT * FROM password_reset_tokens WHERE token=$1 AND used=FALSE AND expires_at > NOW()',
+      [token]
+    );
+    const tokenRow = tokenResult.rows[0];
+    if (!tokenRow) return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
+
+    // Update password
+    const hashed = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET password=$1 WHERE id=$2', [hashed, tokenRow.user_id]);
+
+    // Mark token as used
+    await pool.query('UPDATE password_reset_tokens SET used=TRUE WHERE id=$1', [tokenRow.id]);
+
+    // Revoke all sessions by logging (JWT is stateless, so user needs to sign in again)
+    const user = await pool.query('SELECT name FROM users WHERE id=$1', [tokenRow.user_id]);
+    await logActivity(user.rows[0]?.name || 'User', 'reset their password', '', 'system');
+
+    res.json({ ok: true, message: 'Password updated successfully. Please sign in.' });
+  } catch (err) {
+    console.error('Reset password error:', err.message);
+    res.status(500).json({ error: 'Failed to reset password. Please try again.' });
+  }
 });
 
 // ════════════════════════════════════════════════════════════════
